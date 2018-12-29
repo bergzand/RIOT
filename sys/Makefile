@@ -142,6 +142,9 @@ endif
 ifneq (,$(filter usb_hid,$(USEMODULE)))
     DIRS += usb/hid
 endif
+ifneq (,$(filter usb_cdc,$(USEMODULE)))
+     DIRS += usb/cdc
+endif
 
 DIRS += $(dir $(wildcard $(addsuffix /Makefile, $(USEMODULE))))
 

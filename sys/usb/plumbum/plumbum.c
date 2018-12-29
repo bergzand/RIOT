@@ -25,7 +25,13 @@
 #include "usb/plumbum.h"
 #include "usb/plumbum/hdrs.h"
 
-#include "usb/hid/keyboard.h"
+ #ifdef MODULE_USB_HID
+ #include "usb/hid/keyboard.h"
+ #endif
+ #ifdef MODULE_USB_CDC
+ #include "usb/cdc/acm.h"
+ #endif
+
 #include "usb/audio.h"
 #include "usb/plumbum/audio.h"
 
@@ -496,7 +502,13 @@ static void *_plumbum_thread(void *args)
 
     plumbum->state = PLUMBUM_STATE_DISCONNECT;
     mutex_unlock(&plumbum->lock);
-    keyboard_init(plumbum);
+    
+ #ifdef MODULE_USB_HID
+     keyboard_init(plumbum);
+ #endif
+ #ifdef MODULE_USB_CDC
+     cdc_init(plumbum);
+ #endif 
 
     /* Ugly way to make the plumbum_audio module optional */
 #ifdef MODULE_PLUMBUM_AUDIO
