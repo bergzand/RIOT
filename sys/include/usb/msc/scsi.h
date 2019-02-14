@@ -15,8 +15,45 @@ extern "c" {
 
 #define USB_SETUP_REQ_GET_MAX_LUN 0xFE
 
+/* SCSI Commands */
+#define SCSI_TEST_UNIT_READY            0x00
+#define SCSI_REQUEST_SENSE              0x03
+#define SCSI_FORMAT_UNIT                0x04
+#define SCSI_INQUIRY                    0x12
+#define SCSI_MODE_SELECT6               0x15
+#define SCSI_MODE_SENSE6                0x1A
+#define SCSI_START_STOP_UNIT            0x1B
+#define SCSI_MEDIA_REMOVAL              0x1E
+#define SCSI_READ_FORMAT_CAPACITIES     0x23
+#define SCSI_READ_CAPACITY              0x25
+#define SCSI_READ10                     0x28
+#define SCSI_WRITE10                    0x2A
+#define SCSI_VERIFY10                   0x2F
+#define SCSI_MODE_SELECT10              0x55
+#define SCSI_MODE_SENSE10               0x5A
+
+/* Bulk-only Command Block Wrapper */
+typedef struct __attribute__((packed)) {
+    uint32_t signature;
+    uint32_t tag;
+    uint32_t data_len;
+    uint8_t  flags;
+    uint8_t  lun;
+    uint8_t  CB_len;
+    uint8_t  CB[16];
+} msc_cbw_buf_t;
+
+/* Bulk-only Command Status Wrapper */
+typedef struct __attribute__((packed)) {
+    uint32_t signature;
+    uint32_t tag;
+    uint32_t data_left;
+    uint8_t  status;
+} msc_csw_buf_t;
 
 int mass_storage_init(usbus_t *usbus);
+
+int scsi_process_cmd(usbus_t *usbus, usbus_handler_t *handler, usbdev_ep_t *ep, size_t len);
 
 #ifdef __cplusplus
 }

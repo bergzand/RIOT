@@ -118,7 +118,7 @@ static int _handle_setup(usbus_t *usbus, usbus_handler_t *handler, usb_setup_t *
     switch(pkt->request) {
         case USB_SETUP_REQ_GET_MAX_LUN:
      //DEBUG("Type:0x%x, Request:0x%x Value:0x%x, interface:%d, nb:%d\n",pkt->type, pkt->request, pkt->value, pkt->index, pkt->length);
-            usbus_ctrlslicer_put_bytes(usbus,(uint8_t*)&en,1);
+            usbus_ctrlslicer_put_bytes(usbus, (uint8_t*)&en,1);
             usbdev_ep_ready(usbus->in, 0);
             return 0;
         default:
@@ -136,7 +136,7 @@ static int _handle_tr_complete(usbus_t *usbus, usbus_handler_t *handler, usbdev_
         /* Retrieve incoming data */
         usbdev_ep_get(ep, USBOPT_EP_AVAILABLE, &len, sizeof(size_t));
         if (len > 0) {
-
+            scsi_process_cmd(usbus, handler,ep,len);
         }
         usbdev_ep_ready(ep, 0);
         return 0;
