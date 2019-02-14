@@ -58,8 +58,8 @@ typedef struct __attribute__((packed)) {
     uint8_t length;
     uint8_t type;
     uint8_t subtype;
-    uint8_t capabalities;
-    uint8_t data_if;
+//    uint8_t capabalities;
+//    uint8_t data_if;
 } usb_desc_msc_t;
     
 struct usbus_msc_device {

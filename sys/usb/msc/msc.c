@@ -40,6 +40,7 @@ static const usbus_handler_driver_t msc_driver = {
     .event_handler = event_handler,
 };
 
+static usbus_msc_device_t msc_handler;
 
 static size_t _gen_msc_descriptor(usbus_t *usbus, void *arg)
 {
@@ -64,13 +65,13 @@ static const usbus_hdr_gen_funcs_t _msc_descriptor = {
     .get_header_len = _msc_size
 };
 
-static usbus_msc_device_t msc_handler;
 int mass_storage_init(usbus_t *usbus)
 {
+    printf("mass storage init:%p",&msc_handler);
     memset(&msc_handler, 0, sizeof(usbus_msc_device_t));
     msc_handler.usbus = usbus;
     msc_handler.handler_ctrl.driver = &msc_driver;
-    usbus_register_event_handler(usbus, (usbus_handler_t*)&msc_handler);
+    usbus_register_event_handler(usbus, ((usbus_handler_t*)(&msc_handler)));
     return 0;
 }
 
@@ -81,14 +82,14 @@ static void _init(usbus_t *usbus, usbus_handler_t *handler)
     msc->msc_hdr.next = NULL;
     msc->msc_hdr.funcs = &_msc_descriptor;
     msc->msc_hdr.arg = msc;
-
+    printf("msc_hdr:%p\n",&(msc->msc_hdr));
     /* Instantiate interfaces */
     memset(&msc->iface, 0, sizeof(usbus_interface_t));
     /* Configure Interface 0 as control interface */
     msc->iface.class = USB_CLASS_MASS_STORAGE;
     msc->iface.subclass = USB_MSC_SUBCLASS_SCSI_TCS;
     msc->iface.protocol = 80;
-    msc->iface.hdr_gen = NULL;
+    msc->iface.hdr_gen = &(msc->msc_hdr);
     msc->iface.handler = handler;
 
     /* Create required endpoints */
@@ -105,8 +106,6 @@ static void _init(usbus_t *usbus, usbus_handler_t *handler)
 
     usbus_enable_endpoint(&msc->ep_in);
     usbus_enable_endpoint(&msc->ep_out);
-
-
     return;
 }
 
@@ -132,13 +131,12 @@ static int _handle_tr_complete(usbus_t *usbus, usbus_handler_t *handler, usbdev_
 {
     usbus_msc_device_t *msc = (usbus_msc_device_t*)handler;
     (void)usbus;
-    puts("HOLY");
     if (ep == msc->ep_out.ep) {
         size_t len;
         /* Retrieve incoming data */
         usbdev_ep_get(ep, USBOPT_EP_AVAILABLE, &len, sizeof(size_t));
         if (len > 0) {
-            puts("SHIT");
+
         }
         usbdev_ep_ready(ep, 0);
         return 0;
