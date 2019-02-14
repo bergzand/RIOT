@@ -15,6 +15,7 @@ DEVELHELP ?= 1
 
 USEMODULE += usbus
 USEMODULE += usb_msc
+USEMODULE += auto_init_usbus
 USEMODULE += shell
 
 # Change this to 0 show compiler invocation lines by default:

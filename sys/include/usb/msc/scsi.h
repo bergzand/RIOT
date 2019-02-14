@@ -13,10 +13,7 @@
 extern "c" {
 #endif
 
-
-#define USB_SETUP_REQ_SET_LINE_CODING           0x20
-#define USB_SETUP_REQ_GET_LINE_CODING           0x21
-#define USB_SETUP_REQ_SET_CONTROL_LINE_STATE    0x22
+#define USB_SETUP_REQ_GET_MAX_LUN 0xFE
 
 
 int mass_storage_init(usbus_t *usbus);

@@ -52,6 +52,7 @@ extern "c" {
 
 #define USB_TYPE_DESCRIPTOR_MSC         0x24 /**< Mass Storage Class descriptor */
 
+typedef struct usbus_msc_device usbus_msc_device_t;
 
 typedef struct __attribute__((packed)) {
     uint8_t length;
@@ -61,13 +62,14 @@ typedef struct __attribute__((packed)) {
     uint8_t data_if;
 } usb_desc_msc_t;
     
-typedef struct {
-    usbus_handler_t handler;
+struct usbus_msc_device {
+    usbus_handler_t handler_ctrl;
     usbus_interface_t iface;
     usbus_endpoint_t ep_in;
     usbus_endpoint_t ep_out;
     usbus_hdr_gen_t msc_hdr;
-} usbus_msc_device_t;
+    usbus_t *usbus;
+};
 
 #ifdef __cplusplus
 }

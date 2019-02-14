@@ -47,7 +47,6 @@ static size_t _gen_msc_descriptor(usbus_t *usbus, void *arg)
     usb_desc_msc_t msc;
     /* functional msc descriptor */
     msc.length = sizeof(usb_desc_msc_t);
-    //.bcd_hid = 0x0110;
     msc.type = USB_TYPE_DESCRIPTOR_MSC;
     msc.subtype = 0x00;
     usbus_ctrlslicer_put_bytes(usbus, (uint8_t*)&msc, sizeof(msc));
@@ -60,25 +59,27 @@ static size_t _msc_size(usbus_t *usbus, void *arg)
     (void)arg;
     return sizeof(usb_desc_msc_t);
 }
+static const usbus_hdr_gen_funcs_t _msc_descriptor = {
+    .get_header = _gen_msc_descriptor,
+    .get_header_len = _msc_size
+};
 
-static usbus_msc_device_t handler;
-
-int msc_init(usbus_t *usbus)
+static usbus_msc_device_t msc_handler;
+int mass_storage_init(usbus_t *usbus)
 {
-    memset(&handler, 0, sizeof(usbus_msc_device_t));
-    handler->usbusb = usbus;
-    handler.handler_ctrl.driver = &cdc_driver;
-    usbus_register_event_handler(usbus, (usbus_handler_t*)&handler);
+    memset(&msc_handler, 0, sizeof(usbus_msc_device_t));
+    msc_handler.usbus = usbus;
+    msc_handler.handler_ctrl.driver = &msc_driver;
+    usbus_register_event_handler(usbus, (usbus_handler_t*)&msc_handler);
     return 0;
 }
 
-static int _init(usbus_t *usbus, usbus_handler_t *handler)
+static void _init(usbus_t *usbus, usbus_handler_t *handler)
 {
     usbus_msc_device_t *msc = (usbus_msc_device_t*)handler;
 
     msc->msc_hdr.next = NULL;
-    msc->msc_hdr.get_header = _gen_msc_descriptor;
-    msc->msc_hdr.get_header_len = _msc_size;
+    msc->msc_hdr.funcs = &_msc_descriptor;
     msc->msc_hdr.arg = msc;
 
     /* Instantiate interfaces */
@@ -89,25 +90,24 @@ static int _init(usbus_t *usbus, usbus_handler_t *handler)
     msc->iface.protocol = 80;
     msc->iface.hdr_gen = NULL;
     msc->iface.handler = handler;
-    msc->iface.idx = 0;
 
     /* Create required endpoints */
     usbus_add_endpoint(usbus, &msc->iface, &msc->ep_in, USB_EP_TYPE_BULK, USB_EP_DIR_IN, 64);
     msc->ep_in.interval = 20;
     usbus_add_endpoint(usbus, &msc->iface, &msc->ep_out, USB_EP_TYPE_BULK, USB_EP_DIR_OUT, 64);
     msc->ep_out.interval = 20;
-      //  LED0_ON;
+
     /* Add interfaces to the stack */
     usbus_add_interface(usbus, &msc->iface);
-  //  LED0_ON;
-    //msc->ep_in.ep->driver->ready(msc->ep_in.ep, 0);
-    msc->ep_out.ep->driver->ready(msc->ep_out.ep, 0);
-        LED0_ON;
+
+    usbdev_ep_ready(msc->ep_in.ep, 0);
+    usbdev_ep_ready(msc->ep_out.ep, 0);
+
     usbus_enable_endpoint(&msc->ep_in);
     usbus_enable_endpoint(&msc->ep_out);
-        LED0_ON;
 
-    return 0;
+
+    return;
 }
 
 static int _handle_setup(usbus_t *usbus, usbus_handler_t *handler, usb_setup_t *pkt)
@@ -115,16 +115,12 @@ static int _handle_setup(usbus_t *usbus, usbus_handler_t *handler, usb_setup_t *
     (void)handler;
     (void)usbus;
     uint8_t en[1] = {0};
-    //DEBUG("Request:0x%x\n", pkt->request);
+    DEBUG("ReqSetup:0x%x\n", pkt->request);
     switch(pkt->request) {
         case USB_SETUP_REQ_GET_MAX_LUN:
      //DEBUG("Type:0x%x, Request:0x%x Value:0x%x, interface:%d, nb:%d\n",pkt->type, pkt->request, pkt->value, pkt->index, pkt->length);
-            usbus_put_bytes(usbus,(uint8_t*)&en,1);
-            usbus->in->driver->ready(usbus->in, 1);
-            //usbus->out->driver->ready(usbus->out, 1);
-           // usbus->in->driver->set(usbus->in, USBOPT_EP_STALL, &en, sizeof(usbopt_enable_t));
-            //usbus->out->driver->set(usbus->out, USBOPT_EP_STALL, &en, sizeof(usbopt_enable_t));
-            //usbus->in->driver->ready(usbus->in, 0);
+            usbus_ctrlslicer_put_bytes(usbus,(uint8_t*)&en,1);
+            usbdev_ep_ready(usbus->in, 0);
             return 0;
         default:
             DEBUG("default handle setup rqt:0x%x\n", pkt->request);
@@ -134,32 +130,28 @@ static int _handle_setup(usbus_t *usbus, usbus_handler_t *handler, usb_setup_t *
 
 static int _handle_tr_complete(usbus_t *usbus, usbus_handler_t *handler, usbdev_ep_t *ep)
 {
-    (void)ep;
-    (void)handler;
-    size_t len;
-    usbus_msc_device_t *msc = (usbus_msc_device_t*)usbus->handler;
-    usbdev_ep_t *out;
-    puts("ONLYSHIT");
-
-    /* Retrieve incoming data */
-    ep->driver->get( ep, USBOPT_EP_AVAILABLE, &len, sizeof(size_t));
-    ep->driver->ready( ep, 0);
-    if (len > 0) {
-        printf("DATA:%*.*s\n", len, len, (char*) ep->buf);
+    usbus_msc_device_t *msc = (usbus_msc_device_t*)handler;
+    (void)usbus;
+    puts("HOLY");
+    if (ep == msc->ep_out.ep) {
+        size_t len;
+        /* Retrieve incoming data */
+        usbdev_ep_get(ep, USBOPT_EP_AVAILABLE, &len, sizeof(size_t));
+        if (len > 0) {
+            puts("SHIT");
+        }
+        usbdev_ep_ready(ep, 0);
+        return 0;
     }
-    
-    memset(msc->ep_in.ep->buf, 0, len);
-    out = msc->ep_in.ep;
-    memcpy(out->buf, ep->buf, len);
-    out->driver->ready(out, len);
+    else if (ep == msc->ep_out.ep) {
+        puts("Goodnews");
+    }
     return 0;
 }
 
 static int event_handler(usbus_t *usbus, usbus_handler_t *handler, uint16_t event, void *arg)
 {
-    puts("Huh");
     switch(event) {
-        
         case USBUS_MSG_TYPE_SETUP_RQ:
             return _handle_setup(usbus, handler, (usb_setup_t*)arg);
         case USBUS_MSG_TYPE_TR_COMPLETE:
