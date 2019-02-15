@@ -13,7 +13,8 @@
 extern "c" {
 #endif
 
-#define USB_SETUP_REQ_GET_MAX_LUN 0xFE
+#define USB_SETUP_REQ_GET_MAX_LUN       0xFE
+#define USB_SETUP_REQ_RESET             0xFF
 
 /* SCSI Commands */
 #define SCSI_TEST_UNIT_READY            0x00
@@ -32,6 +33,8 @@ extern "c" {
 #define SCSI_MODE_SELECT10              0x55
 #define SCSI_MODE_SENSE10               0x5A
 
+#define SCSI_CBW_SIGNATURE              0x55534243
+#define SCSI_CSW_SIGNATURE              0x55534253
 /* Bulk-only Command Block Wrapper */
 typedef struct __attribute__((packed)) {
     uint32_t signature;

@@ -36,50 +36,72 @@
 int scsi_process_cmd(usbus_t *usbus, usbus_handler_t *handler, usbdev_ep_t *ep,size_t len) {
     (void)usbus;
     (void)handler;
-    /* store data into specific struct */
-    msc_cbw_buf_t *cbw = (msc_cbw_buf_t*) ep->buf;
+
     if (len == sizeof(msc_cbw_buf_t)) {
         puts("Command Block Wrapper");
-
     }
     else {
         printf("error receiving, ep->len:%d should be %d\n",len,sizeof(msc_cbw_buf_t));
+        return -1;
     }
+
+    /* store data into specific struct */
+    msc_cbw_buf_t *cbw = (msc_cbw_buf_t*) ep->buf;
+
+    /* Check Command Block signature */
+    if (cbw->signature != SCSI_CBW_SIGNATURE) {
+        puts("Invalid CBW signature, abort");
+        return -1;
+    }
+
     switch(cbw->CB[0]) {
         case SCSI_TEST_UNIT_READY:
             puts("TODO: SCSI_TEST_UNIT_READY");
             break;
         case SCSI_REQUEST_SENSE:
+            puts("TODO: SCSI_REQUEST_SENSE");
             break;
         case SCSI_FORMAT_UNIT:
+            puts("TODO: SCSI_FORMAT_UNIT");
             break;
         case SCSI_INQUIRY:
             puts("TODO: SCSI_INQUIRY");
             break;
         case SCSI_START_STOP_UNIT:
+            puts("TODO: SCSI_START_STOP_UNIT");
             break;
         case SCSI_MEDIA_REMOVAL:
+            puts("TODO: SCSI_MEDIA_REMOVAL");
             break;
         case SCSI_MODE_SELECT6:
+            puts("TODO: SCSI_MODE_SELECT6");
             break;
         case SCSI_MODE_SENSE6:
+            puts("TODO: SCSI_MODE_SENSE6");
             break;
         case SCSI_MODE_SELECT10:
+            puts("TODO: SCSI_MODE_SELECT10");
             break;
         case SCSI_MODE_SENSE10:
+            puts("TODO: SCSI_MODE_SENSE10");
             break;
         case SCSI_READ_FORMAT_CAPACITIES:
+            puts("TODO: SCSI_READ_FORMAT_CAPACITIES");
             break;
         case SCSI_READ_CAPACITY:
+            puts("TODO: SCSI_READ_CAPACITY");
             break;
         case SCSI_READ10:
+            puts("TODO: SCSI_READ10");
             break;
         case SCSI_WRITE10:
+            puts("TODO: SCSI_WRITE10");
             break;
         case SCSI_VERIFY10:
+            puts("TODO: SCSI_VERIFY10");
             break;
         default:
-            puts("Unhandled SCSI command");
+            printf("Unhandled SCSI command:0x%x", cbw->CB[0]);
     }
     return 0;
 }

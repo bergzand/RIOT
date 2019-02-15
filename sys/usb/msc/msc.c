@@ -131,18 +131,20 @@ static int _handle_tr_complete(usbus_t *usbus, usbus_handler_t *handler, usbdev_
 {
     usbus_msc_device_t *msc = (usbus_msc_device_t*)handler;
     (void)usbus;
+
     if (ep == msc->ep_out.ep) {
         size_t len;
         /* Retrieve incoming data */
         usbdev_ep_get(ep, USBOPT_EP_AVAILABLE, &len, sizeof(size_t));
         if (len > 0) {
-            scsi_process_cmd(usbus, handler,ep,len);
+            /* Process incoming endpoint buffer */
+            scsi_process_cmd(usbus, handler, ep, len);
         }
         usbdev_ep_ready(ep, 0);
         return 0;
     }
-    else if (ep == msc->ep_out.ep) {
-        puts("Goodnews");
+    else if (ep == msc->ep_in.ep) {
+        puts("tr_complete:ep->in Data needed to be process");
     }
     return 0;
 }
