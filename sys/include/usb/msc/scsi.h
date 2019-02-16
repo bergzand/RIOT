@@ -35,6 +35,17 @@ extern "c" {
 
 #define SCSI_CBW_SIGNATURE              0x55534243
 #define SCSI_CSW_SIGNATURE              0x55534253
+
+typedef struct __attribute__((packed)) {
+    uint8_t type;
+    uint8_t removable;
+    uint16_t version;
+    uint8_t length;
+    uint8_t tmp[3];
+    uint8_t vendor_id[8];
+    uint8_t product_id[16];
+    uint8_t product_rev[4];
+} msc_inquiry_pkt_t;
 /* Bulk-only Command Block Wrapper */
 typedef struct __attribute__((packed)) {
     uint32_t signature;
