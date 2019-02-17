@@ -106,20 +106,16 @@ static const uint8_t CLEUSB[] = {0, 0, 0, 0, 0, 0, 0, 0,
 void _scsi_test_unit_ready(usbus_handler_t *handler, usbdev_ep_t *ep, msc_cbw_buf_t *cbw) {
     usbus_msc_device_t *msc = (usbus_msc_device_t*)handler;
     (void)ep;
-        if(cbw->data_len != 0) {
+
+    if(cbw->data_len != 0) {
         static const usbopt_enable_t enable = USBOPT_ENABLE;
         printf("flags:0x%x,len:%ld\n", cbw->flags,cbw->data_len);
         if((cbw->flags & 0x80) != 0) {
             usbdev_ep_set(msc->ep_in.ep, USBOPT_EP_STALL, &enable, sizeof(usbopt_enable_t));
-            //usbdev_ep_ready(msc->ep_in.ep, 0);
         }
         else {
             usbdev_ep_set(msc->ep_out.ep, USBOPT_EP_STALL, &enable, sizeof(usbopt_enable_t));
-            //usbdev_ep_set(msc->ep_in.ep, USBOPT_EP_STALL, &enable, sizeof(usbopt_enable_t));
-            //usbdev_ep_ready(msc->ep_out.ep, 0);
-           // puts("MSC->EP_OUT:STALL");
         }
-
     }
     scsi_gen_csw(NULL, handler, 0, 0);
     return;
@@ -178,9 +174,9 @@ void _scsi_inquiry(usbus_handler_t *handler, usbdev_ep_t *ep) {
     pkt.length = len - 4;
     pkt.tmp[0] = 0x80;
 
-    memcpy(&pkt.vendor_id, VENDOR_ID, 8);
-    memcpy(&pkt.product_id, PRODUCT_ID, 16);
-    memcpy(&pkt.product_rev, PRODUCT_REV, 4);
+    memcpy(&pkt.vendor_id, VENDOR_ID, sizeof(pkt.vendor_id));
+    memcpy(&pkt.product_id, PRODUCT_ID, sizeof(pkt.product_id));
+    memcpy(&pkt.product_rev, PRODUCT_REV, sizeof(pkt.product_rev));
 
     /* copy into ep buffer */
     memcpy(msc->ep_in.ep->buf, &pkt, len);
@@ -193,23 +189,26 @@ void _scsi_inquiry(usbus_handler_t *handler, usbdev_ep_t *ep) {
 void _scsi_read_capacity(usbus_handler_t *handler, usbdev_ep_t *ep) {
     (void)ep;
     usbus_msc_device_t *msc = (usbus_msc_device_t*)handler;
-   // msc_read_capa_pkt_t pkt;
-   uint8_t pkt[8];
+    msc_read_capa_pkt_t pkt2;
+    uint8_t pkt[8];
     size_t len = 8;
     memset(pkt, 0, len);
     uint32_t MSC_BlockCount = 1;
     uint32_t MSC_BlockSize = 512;
-  pkt[ 0] = ((MSC_BlockCount - 1) >> 24) & 0xFF;
-  pkt[ 1] = ((MSC_BlockCount - 1) >> 16) & 0xFF;
-  pkt[ 2] = ((MSC_BlockCount - 1) >>  8) & 0xFF;
-  pkt[ 3] = ((MSC_BlockCount - 1) >>  0) & 0xFF;
+    pkt2.blk_len = 512;
+    pkt[ 0] = ((MSC_BlockCount - 1) >> 24) & 0xFF;
+    pkt[ 1] = ((MSC_BlockCount - 1) >> 16) & 0xFF;
+    pkt[ 2] = ((MSC_BlockCount - 1) >>  8) & 0xFF;
+    pkt[ 3] = ((MSC_BlockCount - 1) >>  0) & 0xFF;
 
-  /* Block Length */
-  pkt[ 4] = (MSC_BlockSize >> 24) & 0xFF;
-  pkt[ 5] = (MSC_BlockSize >> 16) & 0xFF;
-  pkt[ 6] = (MSC_BlockSize >>  8) & 0xFF;
-  pkt[ 7] = (MSC_BlockSize >>  0) & 0xFF;
+    /* Block Length */
+    pkt[ 4] = (MSC_BlockSize >> 24) & 0xFF;
+    pkt[ 5] = (MSC_BlockSize >> 16) & 0xFF;
+    pkt[ 6] = (MSC_BlockSize >>  8) & 0xFF;
+    pkt[ 7] = (MSC_BlockSize >>  0) & 0xFF;
 
+    puts("AAAAAAAAAAAAAAAAAAA");
+    printf("pkt:0x%lx pkt2:0x%lx", *(uint32_t*)&pkt[4], pkt2.blk_len);
     /* copy into ep buffer */
     memcpy(msc->ep_in.ep->buf, pkt, len);
     usbdev_ep_ready(msc->ep_in.ep, len);
