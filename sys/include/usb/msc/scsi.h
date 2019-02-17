@@ -46,6 +46,11 @@ typedef struct __attribute__((packed)) {
     uint8_t product_id[16];
     uint8_t product_rev[4];
 } msc_inquiry_pkt_t;
+
+typedef struct __attribute__((packed)) {
+    uint32_t last_blk;
+    uint32_t blk_len;
+} msc_read_capa_pkt_t;
 /* Bulk-only Command Block Wrapper */
 typedef struct __attribute__((packed)) {
     uint32_t signature;
@@ -68,6 +73,7 @@ typedef struct __attribute__((packed)) {
 int mass_storage_init(usbus_t *usbus);
 
 int scsi_process_cmd(usbus_t *usbus, usbus_handler_t *handler, usbdev_ep_t *ep, size_t len);
+int scsi_gen_csw(usbus_t *usbus, usbus_handler_t *handler, uint8_t status, size_t len);
 
 #ifdef __cplusplus
 }

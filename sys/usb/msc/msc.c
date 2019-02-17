@@ -93,9 +93,9 @@ static void _init(usbus_t *usbus, usbus_handler_t *handler)
     msc->iface.handler = handler;
 
     /* Create required endpoints */
-    usbus_add_endpoint(usbus, &msc->iface, &msc->ep_in, USB_EP_TYPE_BULK, USB_EP_DIR_IN, 256);
+    usbus_add_endpoint(usbus, &msc->iface, &msc->ep_in, USB_EP_TYPE_BULK, USB_EP_DIR_IN, 64);
     msc->ep_in.interval = 20;
-    usbus_add_endpoint(usbus, &msc->iface, &msc->ep_out, USB_EP_TYPE_BULK, USB_EP_DIR_OUT, 256);
+    usbus_add_endpoint(usbus, &msc->iface, &msc->ep_out, USB_EP_TYPE_BULK, USB_EP_DIR_OUT, 64);
     msc->ep_out.interval = 20;
 
     /* Add interfaces to the stack */
@@ -140,18 +140,18 @@ static int _handle_tr_complete(usbus_t *usbus, usbus_handler_t *handler, usbdev_
             /* Process incoming endpoint buffer */
             scsi_process_cmd(usbus, handler, ep, len);
         }
-        usbdev_ep_ready(ep, 0);
+        //usbdev_ep_ready(ep, 0);
         return 0;
     }
     else if (ep == msc->ep_in.ep) {
-        size_t len;
+     //   size_t len;
         /* Retrieve incoming data */
-        usbdev_ep_get(ep, USBOPT_EP_AVAILABLE, &len, sizeof(size_t));
-        if (len > 0) {
+      //  usbdev_ep_get(ep, USBOPT_EP_AVAILABLE, &len, sizeof(size_t));
+        //if (len > 0) {
             /* Process incoming endpoint buffer */
-            printf("ep->in len:%d\n", len);
-        }
-        usbdev_ep_ready(ep, 0);
+          //  scsi_process_in_cmd(usbus, handler, ep, len);
+      //  }
+        //usbdev_ep_ready(ep, 0);
     }
     return 0;
 }
