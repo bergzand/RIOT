@@ -58,8 +58,8 @@ typedef struct __attribute__((packed)) {
     uint32_t data_len;
     uint8_t  flags;
     uint8_t  lun;
-    uint8_t  CB_len;
-    uint8_t  CB[16];
+    uint8_t  cb_len;
+    uint8_t  cb[16];
 } msc_cbw_buf_t;
 
 /* Bulk-only Command Status Wrapper */

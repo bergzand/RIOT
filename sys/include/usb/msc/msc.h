@@ -45,10 +45,16 @@ extern "c" {
 #define USB_MSC_PROTOCOL_BBB          0x02 /**< Bulk only transport */
 #define USB_MSC_PROTOCOL_UAS          0x03 /**< UAS allocated by USB-IF */
 #define USB_MSC_PROTOCOL_VENDOR       0x04 /**< Vendor Specific */
+#define USB_MSC_PROTOCOL_BULK_ONLY    0x50
 
-#define USB_HID_COUNTRYCODE_NONE        0x00
+#ifndef USBUS_MSC_BLOCKSIZE
+#define USBUS_MSC_BLOCKSIZE           512
+#endif /*USBUS_MSC_BLOCKSIZE */
 
-#define USB_HID_DESCRIPTOR_TYPE_REPORT  0x22
+#ifndef USBUS_MSC_BLOCK_NUM
+#define USBUS_MSC_BLOCK_NUM 1
+#endif /* USBUS_MSC_BLOCK_NUM */
+
 
 #define USB_TYPE_DESCRIPTOR_MSC         0x24 /**< Mass Storage Class descriptor */
 

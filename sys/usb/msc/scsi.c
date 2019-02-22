@@ -129,15 +129,15 @@ void _scsi_read10(usbus_handler_t *handler, usbdev_ep_t *ep, msc_cbw_buf_t *cbw)
     uint32_t offset;
     uint32_t nb;
     /* Get offset */
-  n = (cbw->CB[2] << 24) |
-      (cbw->CB[3] << 16) |
-      (cbw->CB[4] <<  8) |
-      (cbw->CB[5] <<  0);
+  n = (cbw->cb[2] << 24) |
+      (cbw->cb[3] << 16) |
+      (cbw->cb[4] <<  8) |
+      (cbw->cb[5] <<  0);
 
   offset = n * 512;
     /* Get number of blocks to transfer */
-  n = (cbw->CB[7] <<  8) |
-      (cbw->CB[8] <<  0);
+  n = (cbw->cb[7] <<  8) |
+      (cbw->cb[8] <<  0);
 
    nb = n * 512;
 
@@ -191,24 +191,25 @@ void _scsi_read_capacity(usbus_handler_t *handler, usbdev_ep_t *ep) {
     usbus_msc_device_t *msc = (usbus_msc_device_t*)handler;
     msc_read_capa_pkt_t pkt2;
     uint8_t pkt[8];
-    size_t len = 8;
+    size_t len = sizeof(msc_read_capa_pkt_t);
     memset(pkt, 0, len);
     uint32_t MSC_BlockCount = 1;
-    uint32_t MSC_BlockSize = 512;
     pkt2.blk_len = 512;
-    pkt[ 0] = ((MSC_BlockCount - 1) >> 24) & 0xFF;
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    pkt2.last_blk = byteorder_swaps((uint32_t)USBUS_MSC_BLOCK_NUM);
+    pkt2.blk_len  = byteorder_swaps((uint32_t)USBUS_MSC_BLOCKSIZE);
+#endif
+   /* pkt[ 0] = ((MSC_BlockCount - 1) >> 24) & 0xFF;
     pkt[ 1] = ((MSC_BlockCount - 1) >> 16) & 0xFF;
     pkt[ 2] = ((MSC_BlockCount - 1) >>  8) & 0xFF;
-    pkt[ 3] = ((MSC_BlockCount - 1) >>  0) & 0xFF;
+    pkt[ 3] = ((MSC_BlockCount - 1) >>  0) & 0xFF;*/
 
     /* Block Length */
-    pkt[ 4] = (MSC_BlockSize >> 24) & 0xFF;
-    pkt[ 5] = (MSC_BlockSize >> 16) & 0xFF;
-    pkt[ 6] = (MSC_BlockSize >>  8) & 0xFF;
-    pkt[ 7] = (MSC_BlockSize >>  0) & 0xFF;
+    /*pkt[ 4] = (USBUS_MSC_BLOCKSIZE >> 24) & 0xFF;
+    pkt[ 5] = (USBUS_MSC_BLOCKSIZE >> 16) & 0xFF;
+    pkt[ 6] = (USBUS_MSC_BLOCKSIZE >>  8) & 0xFF;
+    pkt[ 7] = (USBUS_MSC_BLOCKSIZE >>  0) & 0xFF;*/
 
-    puts("AAAAAAAAAAAAAAAAAAA");
-    printf("pkt:0x%lx pkt2:0x%lx", *(uint32_t*)&pkt[4], pkt2.blk_len);
     /* copy into ep buffer */
     memcpy(msc->ep_in.ep->buf, pkt, len);
     usbdev_ep_ready(msc->ep_in.ep, len);
@@ -267,7 +268,7 @@ int scsi_process_cmd(usbus_t *usbus, usbus_handler_t *handler, usbdev_ep_t *ep, 
 
     /* Check Command Block signature */
     if (cbw->signature != SCSI_CBW_SIGNATURE) {
-       // printf("Invalid CBW signature:0x%lx, abort\n", cbw->signature);
+        printf("Invalid CBW signature:0x%lx, abort\n", cbw->signature);
         //return -1;
     }
     stag = cbw->tag;

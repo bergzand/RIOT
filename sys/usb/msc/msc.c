@@ -88,7 +88,7 @@ static void _init(usbus_t *usbus, usbus_handler_t *handler)
     /* Configure Interface 0 as control interface */
     msc->iface.class = USB_CLASS_MASS_STORAGE;
     msc->iface.subclass = USB_MSC_SUBCLASS_SCSI_TCS;
-    msc->iface.protocol = 80;
+    msc->iface.protocol = USB_MSC_PROTOCOL_BULK_ONLY;
     msc->iface.hdr_gen = &(msc->msc_hdr);
     msc->iface.handler = handler;
 
@@ -111,16 +111,19 @@ static void _init(usbus_t *usbus, usbus_handler_t *handler)
 
 static int _handle_setup(usbus_t *usbus, usbus_handler_t *handler, usb_setup_t *pkt)
 {
-    (void)handler;
     (void)usbus;
-    uint8_t en[1] = {0};
+    usbus_msc_device_t *msc = (usbus_msc_device_t*)handler;
+
     DEBUG("ReqSetup:0x%x\n", pkt->request);
     switch(pkt->request) {
         case USB_SETUP_REQ_GET_MAX_LUN:
-     //DEBUG("Type:0x%x, Request:0x%x Value:0x%x, interface:%d, nb:%d\n",pkt->type, pkt->request, pkt->value, pkt->index, pkt->length);
-            usbus_ctrlslicer_put_bytes(usbus, (uint8_t*)&en,1);
-            usbdev_ep_ready(usbus->in, 0);
+            static const usbopt_enable_t enable = USBOPT_ENABLE;
+            /* Stall as we don't support this feature */
+            usbdev_ep_set(msc->ep_in.ep, USBOPT_EP_STALL, &enable, sizeof(usbopt_enable_t));
             return 0;
+        case USB_SETUP_REQ_RESET:
+            DEBUG("TODO: implement reset setup request\n");
+            break;
         default:
             DEBUG("default handle setup rqt:0x%x\n", pkt->request);
             return -1;
@@ -140,7 +143,6 @@ static int _handle_tr_complete(usbus_t *usbus, usbus_handler_t *handler, usbdev_
             /* Process incoming endpoint buffer */
             scsi_process_cmd(usbus, handler, ep, len);
         }
-        //usbdev_ep_ready(ep, 0);
         return 0;
     }
     else if (ep == msc->ep_in.ep) {
