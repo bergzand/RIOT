@@ -40,21 +40,24 @@
 #include "log.h"
 
 static int _validate_uuid(suit_manifest_t *manifest,
-                          nanocbor_value_t *it,
+                          suit_param_ref_t *ref,
                           uuid_t *uuid)
 {
-    (void)manifest;
     const uint8_t *uuid_manifest_ptr;
     size_t len = sizeof(uuid_t);
-    char uuid_str[UUID_STR_LEN + 1];
-    char uuid_str2[UUID_STR_LEN + 1];
-    if (nanocbor_get_bstr(it, &uuid_manifest_ptr, &len) < 0) {
+    nanocbor_value_t it;
+
+    if ((suit_param_ref_to_cbor(manifest, ref, &it) == 0) ||
+            (nanocbor_get_bstr(&it, &uuid_manifest_ptr, &len) < 0)) {
         return SUIT_ERR_INVALID_MANIFEST;
     }
 
+    char uuid_str[UUID_STR_LEN + 1];
+    char uuid_str2[UUID_STR_LEN + 1];
     uuid_to_string((uuid_t *)uuid_manifest_ptr, uuid_str);
     uuid_to_string(uuid, uuid_str2);
     LOG_INFO("Comparing %s to %s from manifest\n", uuid_str2, uuid_str);
+
     return uuid_equal(uuid, (uuid_t *)uuid_manifest_ptr)
            ? SUIT_OK
            : SUIT_ERR_COND;
@@ -65,8 +68,10 @@ static int _cond_vendor_handler(suit_manifest_t *manifest,
                                 nanocbor_value_t *it)
 {
     (void)key;
+    (void)it;
     LOG_INFO("validating vendor ID\n");
-    int rc = _validate_uuid(manifest, it, suit_get_vendor_id());
+    int rc = _validate_uuid(manifest, &manifest->param_vendor_id,
+                            suit_get_vendor_id());
     if (rc == SUIT_OK) {
         LOG_INFO("validating vendor ID: OK\n");
         manifest->validated |= SUIT_VALIDATED_VENDOR;
@@ -79,8 +84,10 @@ static int _cond_class_handler(suit_manifest_t *manifest,
                                nanocbor_value_t *it)
 {
     (void)key;
+    (void)it;
     LOG_INFO("validating class id\n");
-    int rc = _validate_uuid(manifest, it, suit_get_class_id());
+    int rc = _validate_uuid(manifest, &manifest->param_class_id,
+                            suit_get_class_id());
     if (rc == SUIT_OK) {
         LOG_INFO("validating class id: OK\n");
         manifest->validated |= SUIT_VALIDATED_CLASS;
@@ -172,32 +179,6 @@ static int _dtv_try_each(suit_manifest_t *manifest,
     return res;
 }
 
-static int _param_get_uri_list(suit_manifest_t *manifest,
-                               nanocbor_value_t *it)
-{
-    LOG_DEBUG("got url list\n");
-    manifest->components[manifest->component_current].url = *it;
-    return 0;
-}
-static int _param_get_digest(suit_manifest_t *manifest, nanocbor_value_t *it)
-{
-    LOG_DEBUG("got digest\n");
-    manifest->components[manifest->component_current].digest = *it;
-    return 0;
-}
-
-static int _param_get_img_size(suit_manifest_t *manifest,
-                               nanocbor_value_t *it)
-{
-    int res = nanocbor_get_uint32(it, &manifest->components[0].size);
-
-    if (res < 0) {
-        LOG_DEBUG("error getting image size\n");
-        return res;
-    }
-    return res;
-}
-
 static int _dtv_set_param(suit_manifest_t *manifest, int key,
                           nanocbor_value_t *it)
 {
@@ -210,31 +191,43 @@ static int _dtv_set_param(suit_manifest_t *manifest, int key,
     while (!nanocbor_at_end(&map)) {
         /* map points to the key of the param */
         int32_t param_key;
-        nanocbor_get_int32(&map, &param_key);
-        LOG_DEBUG("Current component index: %" PRIi32 "\n",
-                  manifest->component_current);
+        if (nanocbor_get_int32(&map, &param_key) < 0) {
+            return SUIT_ERR_INVALID_MANIFEST;
+        }
         LOG_DEBUG("param_key=%" PRIi32 "\n", param_key);
-        int res;
+        unsigned int type = nanocbor_get_type(&map);
+        /* Filter 'complex' types and only allow int, nint, bstr and tstr types
+         * for parameter values */
+        if (type > NANOCBOR_TYPE_TSTR) {
+            return SUIT_ERR_INVALID_MANIFEST;
+        }
+        suit_param_ref_t *ref;
         switch (param_key) {
-            case 6: /* SUIT URI LIST */
-                res = _param_get_uri_list(manifest, &map);
+            case 1: /* SUIT VENDOR ID */
+                ref = &manifest->param_vendor_id;
                 break;
-            case 11: /* SUIT DIGEST */
-                res = _param_get_digest(manifest, &map);
+            case 2: /* SUIT URI LIST */
+                ref = &manifest->param_class_id;
                 break;
-            case 12: /* SUIT IMAGE SIZE */
-                res = _param_get_img_size(manifest, &map);
+            case 3: /* SUIT DIGEST */
+                ref = &manifest->param_digest;
+                break;
+            case 14: /* SUIT IMAGE SIZE */
+                ref = &manifest->param_size;
+                break;
+            case 21: /* SUIT URI */
+                ref = &manifest->param_uri;
                 break;
             default:
                 LOG_DEBUG("Unsupported parameter %" PRIi32 "\n", param_key);
-                res = SUIT_ERR_UNSUPPORTED;
+                return SUIT_ERR_UNSUPPORTED;
         }
 
-        nanocbor_skip(&map);
 
-        if (res) {
-            return res;
-        }
+        suit_param_cbor_to_ref(manifest, ref, &map);
+
+        /* Simple skip is sufficient to skip non-complex types */
+        nanocbor_skip_simple(&map);
     }
     return SUIT_OK;
 }
@@ -302,8 +295,19 @@ static int _dtv_verify_image_match(suit_manifest_t *manifest, int key,
     size_t digest_len;
     int target_slot = riotboot_slot_other();
 
+    uint32_t img_size;
+    nanocbor_value_t param_size;
+    if ((suit_param_ref_to_cbor(manifest, &manifest->param_size, &param_size) == 0) ||
+            (nanocbor_get_uint32(&param_size, &img_size) < 0)) {
+        return SUIT_ERR_INVALID_MANIFEST;
+    }
+
     LOG_INFO("Verifying image digest\n");
-    nanocbor_value_t _v = manifest->components[0].digest;
+    nanocbor_value_t _v;
+    if (suit_param_ref_to_cbor(manifest, &manifest->param_digest, &_v) == 0) {
+        return SUIT_ERR_INVALID_MANIFEST;
+    }
+
     int res = nanocbor_get_subcbor(&_v, &digest, &digest_len);
     if (res < 0) {
         LOG_DEBUG("Unable to parse digest structure\n");
@@ -315,7 +319,7 @@ static int _dtv_verify_image_match(suit_manifest_t *manifest, int key,
      * so shift the pointer accordingly.
      */
     res = riotboot_flashwrite_verify_sha256(digest + 4,
-                                            manifest->components[0].size,
+                                            img_size,
                                             target_slot);
     if (res != 0) {
         return SUIT_ERR_COND;

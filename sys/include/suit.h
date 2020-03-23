@@ -14,10 +14,10 @@
  * @experimental
  *
  * @note The current implementation of this specification is based on the
- *       IETF-SUIT-v3 draft. The module is still experimental and will change to
+ *       IETF-SUIT-v4 draft. The module is still experimental and will change to
  *       match future draft specifications
  *
- * @see https://tools.ietf.org/html/draft-ietf-suit-manifest-03
+ * @see https://tools.ietf.org/html/draft-ietf-suit-manifest-04
  *
  * @{
  *
@@ -136,6 +136,13 @@ typedef struct {
 } suit_component_t;
 
 /**
+ * @brief SUIT parameter reference
+ */
+typedef struct {
+    uint16_t offset;
+} suit_param_ref_t;
+
+/**
  * @brief SUIT manifest struct
  */
 typedef struct {
@@ -145,6 +152,11 @@ typedef struct {
     size_t cose_payload_len;        /**< length of the COSE payload */
     uint32_t validated;             /**< bitfield of validated policies */
     uint32_t state;                 /**< bitfield holding state information */
+    suit_param_ref_t param_vendor_id;
+    suit_param_ref_t param_class_id;
+    suit_param_ref_t param_digest;
+    suit_param_ref_t param_uri;
+    suit_param_ref_t param_size;
     /** List of components in the manifest */
     suit_component_t components[SUIT_COMPONENT_MAX];
     unsigned components_len;        /**< Current number of components */

@@ -135,14 +135,14 @@ extern const suit_manifest_handler_t suit_command_sequence_handlers[];
 extern const size_t suit_command_sequence_handlers_len;
 
 /**
- * @brief SUIT container handlers reference
+ * @brief SUIT envelope handlers reference
  */
-extern const suit_manifest_handler_t suit_container_handlers[];
+extern const suit_manifest_handler_t suit_envelope_handlers[];
 
 /**
- * @brief length of the SUIT container handlers
+ * @brief length of the SUIT envelope handlers
  */
-extern const size_t suit_container_handlers_len;
+extern const size_t suit_envelope_handlers_len;
 
 /**
  * @brief SUIT common handlers reference
@@ -193,6 +193,12 @@ int suit_handle_manifest_structure_bstr(suit_manifest_t *manifest,
                                         const suit_manifest_handler_t *handlers,
                                         size_t handlers_len);
 
+uint16_t suit_param_ref_to_cbor(suit_manifest_t *manifest,
+                                suit_param_ref_t *ref,
+                                nanocbor_value_t *val);
+void suit_param_cbor_to_ref(suit_manifest_t *manifest,
+                           suit_param_ref_t *ref,
+                           nanocbor_value_t *val);
 #ifdef __cplusplus
 }
 #endif
