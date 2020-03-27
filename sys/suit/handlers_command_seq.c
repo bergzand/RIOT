@@ -267,9 +267,7 @@ static int _dtv_fetch(suit_manifest_t *manifest, int key,
     if (0) {}
 #ifdef MODULE_SUIT_TRANSPORT_COAP
     else if (strncmp(manifest->urlbuf, "coap://", 7) == 0) {
-        res = suit_coap_get_blockwise_url(manifest->urlbuf, COAP_BLOCKSIZE_64,
-                                          suit_flashwrite_helper,
-                                          manifest);
+        res = suit_coap_get_blockwise_payload(manifest, manifest->urlbuf);
     }
 #endif
 #ifdef MODULE_SUIT_TRANSPORT_MOCK
