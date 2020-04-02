@@ -28,7 +28,7 @@ int main(void)
     }
 
     memset(&uri_parsed, 0, sizeof(uri_parsed));
-	if (uri_parser_process(&uri_parsed, (const char*)buffer) < 0) {
+	if (uri_parser_process(&uri_parsed, (const char*)buffer, len) < 0) {
         printf("Failed to parse\n");
     }
 
