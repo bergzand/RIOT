@@ -97,7 +97,8 @@ SECTIONS
 
         . = ALIGN(4);
         _efixed = .;            /* End of text section */
-    } > rom
+    /* ALlow separate VMA and LMA addresses for ROM */
+    } > rom_read AT > rom
 
     /* .ARM.exidx is sorted, so has to go in its own output section.  */
     PROVIDE_HIDDEN (__exidx_start = .);

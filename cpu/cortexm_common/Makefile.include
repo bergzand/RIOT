@@ -21,6 +21,10 @@ ifneq (,$(BACKUP_RAM_LEN))
   CFLAGS    += -DCPU_HAS_BACKUP_RAM=1
 endif
 
+ifneq (,$(ROM_VMA_ADDR))
+  LINKFLAGS += $(LINKFLAGPREFIX)--defsym=_rom_read_addr=$(ROM_READ_ADDR)
+endif
+
 TOOLCHAINS_SUPPORTED = gnu llvm
 
 # Only define the linker symbol if the variable is set
