@@ -53,8 +53,11 @@ SECTIONS
         _isr_vectors = DEFINED(_isr_vectors) ? _isr_vectors : . ;
         KEEP(*(SORT(.vectors*)))
         *(.text .text.* .gnu.linkonce.t.*)
+        /* Linker-generated Glue code for Thumb -> ARM and ARM -> Thumb */
         *(.glue_7t) *(.glue_7)
+        /* Read-only data in Text section */
         *(.rodata .rodata* .gnu.linkonce.r.*)
+        /* Exception unwinding information for C++ */
         *(.ARM.extab* .gnu.linkonce.armextab.*)
 
         /* Support C constructors, and C destructors in both user code
