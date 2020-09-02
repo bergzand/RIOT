@@ -25,6 +25,7 @@
 #include "opendefs.h"
 #include "scheduler.h"
 #include "event/callback.h"
+#include "memarray.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,6 +36,7 @@ extern "C" {
  */
 typedef struct {
     event_callback_t task_buff[TASK_LIST_DEPTH]; /**< Task buffer */
+    memarray_t memarray; /**< Memarray management */
 } scheduler_vars_t;
 
 /**

@@ -33,6 +33,7 @@ endif
 ifneq (,$(filter openwsn_riotos,$(USEMODULE)))
   USEMODULE += event
   USEMODULE += event_callback
+  USEMODULE += memarray
 endif
 
 ifneq (,$(filter openwsn_ipv6,$(USEMODULE)))

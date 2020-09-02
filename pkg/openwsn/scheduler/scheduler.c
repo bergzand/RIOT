@@ -19,6 +19,7 @@
  */
 #include "event.h"
 #include "event/callback.h"
+#include "memarray.h"
 
 #include "openwsn_board.h"
 #include "scheduler.h"
@@ -37,26 +38,23 @@ static event_queue_t _queues[TASKPRIO_MAX];
 
 static event_callback_t *_scheduler_get_free_event(void)
 {
-    for (uint8_t i = 0; i < TASK_LIST_DEPTH; i++) {
-        if (_scheduler_vars.task_buff[i].super.handler == NULL) {
-            return &_scheduler_vars.task_buff[i];
-        }
+    event_callback_t *new = memarray_alloc(&_scheduler_vars.memarray);
+    if (!new) {
+        /* task list has overflown. This should never happen! */
+        LOG_ERROR("[openos/scheduler]: critical, task list overflow\n");
+        leds_error_blink();
+        board_reset();
     }
-    /* task list has overflown. This should never happen! */
-    LOG_ERROR("[openos/scheduler]: critical, task list overflow\n");
-    leds_error_blink();
-    board_reset();
-    return NULL;
+    memset(new, 0, sizeof(event_callback_t));
+    return new;
 }
 
 void scheduler_init(void)
 {
     memset(&_scheduler_vars, 0, sizeof(scheduler_vars_t));
     memset(&scheduler_dbg, 0, sizeof(scheduler_dbg_t));
-
-    for (uint8_t i = 0; i < TASK_LIST_DEPTH; i++) {
-        _scheduler_vars.task_buff[i].super.handler = NULL;
-    }
+    memarray_init(&_scheduler_vars.memarray, &_scheduler_vars.task_buff,
+                  sizeof(event_callback_t), TASK_LIST_DEPTH);
 
     event_queues_init_detached(_queues, TASKPRIO_MAX);
 }
@@ -74,7 +72,7 @@ void scheduler_start(unsigned state)
         debugpins_task_clr();
         event->handler(event);
         /* remove from task list */
-        event->handler = NULL;
+        memarray_free(&_scheduler_vars.memarray, event);
         scheduler_dbg.numTasksCur--;
         debugpins_task_set();
     }
