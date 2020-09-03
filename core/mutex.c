@@ -34,6 +34,7 @@
 
 int _mutex_lock(mutex_t *mutex, volatile uint8_t *blocking)
 {
+    dbgpin_set(2);
     unsigned irqstate = irq_disable();
 
     DEBUG("PID[%" PRIkernel_pid "]: Mutex in use.\n", thread_getpid());
@@ -59,6 +60,7 @@ int _mutex_lock(mutex_t *mutex, volatile uint8_t *blocking)
             thread_add_to_list(&mutex->queue, me);
         }
         irq_restore(irqstate);
+        dbgpin_clr(2);
         thread_yield_higher();
         /* We were woken up by scheduler. Waker removed us from queue.
          * We have the mutex now. */
@@ -72,6 +74,7 @@ int _mutex_lock(mutex_t *mutex, volatile uint8_t *blocking)
 
 void mutex_unlock(mutex_t *mutex)
 {
+    dbgpin_set(3);
     unsigned irqstate = irq_disable();
 
     DEBUG("mutex_unlock(): queue.next: %p pid: %" PRIkernel_pid "\n",
@@ -104,6 +107,7 @@ void mutex_unlock(mutex_t *mutex)
 
     uint16_t process_priority = process->priority;
     irq_restore(irqstate);
+    dbgpin_clr(3);
     sched_switch(process_priority);
 }
 

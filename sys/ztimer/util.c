@@ -43,6 +43,7 @@ static void _callback_unlock_mutex(void *arg)
 
 void ztimer_sleep(ztimer_clock_t *clock, uint32_t duration)
 {
+    dbgpin_set(0);
     assert(!irq_is_in());
     mutex_t mutex = MUTEX_INIT_LOCKED;
 
@@ -53,6 +54,7 @@ void ztimer_sleep(ztimer_clock_t *clock, uint32_t duration)
 
     ztimer_set(clock, &timer, duration);
     mutex_lock(&mutex);
+    dbgpin_clr(0);
 }
 
 void ztimer_periodic_wakeup(ztimer_clock_t *clock, ztimer_now_t *last_wakeup,

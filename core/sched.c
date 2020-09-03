@@ -140,6 +140,7 @@ static void _unschedule(thread_t *active_thread)
 
 int __attribute__((used)) sched_run(void)
 {
+    dbgpin_set(5);
     thread_t *active_thread = thread_get_active();
 
     if (!IS_USED(MODULE_CORE_IDLE_THREAD)) {
@@ -170,6 +171,7 @@ int __attribute__((used)) sched_run(void)
 
     if (active_thread == next_thread) {
         DEBUG("sched_run: done, sched_active_thread was not changed.\n");
+        dbgpin_clr(5);
         return 0;
     }
 
@@ -200,6 +202,7 @@ int __attribute__((used)) sched_run(void)
 
     DEBUG("sched_run: done, changed sched_active_thread.\n");
 
+    dbgpin_clr(5);
     return 1;
 }
 
@@ -233,6 +236,7 @@ void sched_set_status(thread_t *process, thread_status_t status)
 
 void sched_switch(uint16_t other_prio)
 {
+    dbgpin_set(4);
     thread_t *active_thread = thread_get_active();
     uint16_t current_prio = active_thread->priority;
     int on_runqueue = (active_thread->status >= STATUS_ON_RUNQUEUE);
@@ -249,12 +253,14 @@ void sched_switch(uint16_t other_prio)
         }
         else {
             DEBUG("sched_switch: yielding immediately.\n");
+            dbgpin_clr(4);
             thread_yield_higher();
         }
     }
     else {
         DEBUG("sched_switch: continuing without yield.\n");
     }
+    dbgpin_clr(4);
 }
 
 NORETURN void sched_task_exit(void)

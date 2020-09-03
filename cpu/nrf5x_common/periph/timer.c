@@ -94,6 +94,7 @@ int timer_init(tim_t tim, unsigned long freq, timer_cb_t cb, void *arg)
 
 int timer_set_absolute(tim_t tim, int chan, unsigned int value)
 {
+    dbgpin_set(1);
     /* see if channel is valid */
     if (chan >= timer_config[tim].channels) {
         return -1;
@@ -103,6 +104,7 @@ int timer_set_absolute(tim_t tim, int chan, unsigned int value)
     dev(tim)->CC[chan] = value;
     dev(tim)->INTENSET = (TIMER_INTENSET_COMPARE0_Msk << chan);
 
+    dbgpin_clr(1);
     return 0;
 }
 

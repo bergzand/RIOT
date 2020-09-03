@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "kernel_defines.h"
 #include "ztimer.h"
 #include "timex.h"
 
