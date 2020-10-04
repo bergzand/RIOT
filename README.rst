@@ -1,12 +1,6 @@
-[![Nightly CI status master][master-ci-badge]][master-ci-link]
-[![GitHub release][release-badge]][release-link]
-[![License][license-badge]][license-link]
-[![API docs][api-badge]][api-link]
-[![Wiki][wiki-badge]][wiki-link]
-[![Stack Overflow questions][stackoverflow-badge]][stackoverflow-link]
-[![Twitter][twitter-badge]][twitter-link]
-[![IRC][irc-badge]][irc-link]
-[![Matrix][matrix-badge]][matrix-link]
+|CI| |release| |license| |api| |wiki| |stackoverflow| |twitter| |irc| |matrix|
+
+.. code-block::
 
                           ZZZZZZ
                         ZZZZZZZZZZZZ
@@ -52,7 +46,8 @@ indirect business models around the free open-source software platform
 provided by RIOT, e.g. it is possible to link closed-source code with the
 LGPL code.
 
-## FEATURES
+FEATURES
+--------
 
 RIOT is based on a microkernel architecture, and provides features including,
 but not limited to:
@@ -75,43 +70,54 @@ but not limited to:
 * LoRaWAN
 
 
-## GETTING STARTED
+GETTING STARTED
+---------------
+
 * You want to start the RIOT? Just follow our
-[quickstart guide](https://doc.riot-os.org/index.html#the-quickest-start) or
-try this
-[tutorial](https://github.com/RIOT-OS/Tutorials/blob/master/README.md).
-For specific toolchain installation, follow instructions in the
-[getting started](https://doc.riot-os.org/getting-started.html) page.
+  `quickstart guide <https://doc.riot-os.org/index.html#the-quickest-start>`_
+  or try this
+  `tutorial <https://github.com/RIOT-OS/Tutorials/blob/master/README.md>`_.
+  For specific toolchain installation, follow instructions in the
+  `getting started <https://doc.riot-os.org/getting-started.html>`_ page.
 * The RIOT API itself can be built from the code using doxygen. The latest
   version of the documentation is uploaded daily to
-  [riot-os.org/api](https://riot-os.org/api).
+  `riot-os.org/api <https://riot-os.org/api>`_.
 
-### USING THE NATIVE PORT WITH NETWORKING
-If you compile RIOT for the native cpu and include the `netdev_tap` module,
-you can specify a network interface like this: `PORT=tap0 make term`
+USING THE NATIVE PORT WITH NETWORKING
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-#### SETTING UP A TAP NETWORK
-There is a shell script in `RIOT/dist/tools/tapsetup` called `tapsetup` which
+If you compile RIOT for the native cpu and include the ``netdev_tap`` module,
+you can specify a network interface like this: ``PORT=tap0 make term``
+
+SETTING UP A TAP NETWORK
+""""""""""""""""""""""""
+
+There is a shell script in ``RIOT/dist/tools/tapsetup`` called ``tapsetup`` which
 you can use to create a network of tap interfaces.
 
 *USAGE*
 
-To create a bridge and two (or `count` at your option) tap interfaces:
+To create a bridge and two (or ``count`` at your option) tap interfaces: ::
 
     sudo ./dist/tools/tapsetup/tapsetup [-c [<count>]]
 
-## CONTRIBUTE
+CONTRIBUTE
+----------
 
 To contribute something to RIOT, please refer to our
-[contributing document](CONTRIBUTING.md).
+`contributing document <CONTRIBUTING.md>`_.
 
-## MAILING LISTS
-* RIOT OS kernel developers list: [devel@riot-os.org](https://lists.riot-os.org/mailman/listinfo/devel)
-* RIOT OS users list: [users@riot-os.org](https://lists.riot-os.org/mailman/listinfo/users)
-* RIOT commits: [commits@riot-os.org](https://lists.riot-os.org/mailman/listinfo/commits)
-* Github notifications: [notifications@riot-os.org](https://lists.riot-os.org/mailman/listinfo/notifications)
+MAILING LISTS
+-------------
 
-## LICENSE
+* RIOT OS kernel developers list: `devel@riot-os.org <https://lists.riot-os.org/mailman/listinfo/devel>`_
+* RIOT OS users list: `users@riot-os.org <https://lists.riot-os.org/mailman/listinfo/users>`_
+* RIOT commits: `commits@riot-os.org <https://lists.riot-os.org/mailman/listinfo/commits>`_
+* Github notifications: `notifications@riot-os.org <https://lists.riot-os.org/mailman/listinfo/notifications>`_
+
+LICENSE
+-------
+
 * Most of the code developed by the RIOT community is licensed under the GNU
   Lesser General Public License (LGPL) version 2.1 as published by the Free
   Software Foundation.
@@ -125,21 +131,38 @@ For more information, see the RIOT website:
 https://www.riot-os.org
 
 
-[api-badge]: https://img.shields.io/badge/docs-API-informational.svg
-[api-link]: https://riot-os.org/api/
-[irc-badge]: https://img.shields.io/badge/chat-IRC-brightgreen.svg
-[irc-link]: https://webchat.freenode.net?channels=%23riot-os
-[license-badge]: https://img.shields.io/github/license/RIOT-OS/RIOT
-[license-link]: https://github.com/RIOT-OS/RIOT/blob/master/LICENSE
-[master-ci-badge]: https://ci.riot-os.org/RIOT-OS/RIOT/master/latest/badge.svg
-[master-ci-link]: https://ci.riot-os.org/nightlies.html#master
-[matrix-badge]: https://img.shields.io/badge/chat-Matrix-brightgreen.svg
-[matrix-link]: https://matrix.to/#/#riot-os:matrix.org
-[release-badge]: https://img.shields.io/github/release/RIOT-OS/RIOT.svg
-[release-link]: https://github.com/RIOT-OS/RIOT/releases/latest
-[stackoverflow-badge]: https://img.shields.io/badge/stackoverflow-%5Briot--os%5D-yellow
-[stackoverflow-link]: https://stackoverflow.com/questions/tagged/riot-os
-[twitter-badge]: https://img.shields.io/badge/social-Twitter-informational.svg
-[twitter-link]: https://twitter.com/RIOT_OS
-[wiki-badge]: https://img.shields.io/badge/docs-Wiki-informational.svg
-[wiki-link]: https://github.com/RIOT-OS/RIOT/wiki
+.. |api| image:: https://img.shields.io/badge/docs-API-informational.svg
+   :target: https://riot-os.org/api/
+   :alt: API docs
+
+.. |irc| image:: https://img.shields.io/badge/chat-IRC-brightgreen.svg
+   :target: https://webchat.freenode.net?channels=%23riot-os
+   :alt: IRC
+
+.. |license| image:: https://img.shields.io/github/license/RIOT-OS/RIOT
+   :target: https://github.com/RIOT-OS/RIOT/blob/master/LICENSE
+   :alt: License
+
+.. |CI| image:: https://ci.riot-os.org/RIOT-OS/RIOT/master/latest/badge.svg
+   :target: https://ci.riot-os.org/nightlies.html#master
+   :alt: Nightly CI status master
+
+.. |matrix| image:: https://img.shields.io/badge/chat-Matrix-brightgreen.svg
+   :target: https://matrix.to/#/#riot-os:matrix.org
+   :alt: Matrix chat
+
+.. |release| image:: https://img.shields.io/github/release/RIOT-OS/RIOT.svg
+   :target: https://github.com/RIOT-OS/RIOT/releases/latest
+   :alt: GitHub release
+
+.. |stackoverflow| image:: https://img.shields.io/badge/stackoverflow-%5Briot--os%5D-yellow
+   :target: https://stackoverflow.com/questions/tagged/riot-os
+   :alt: Stackoverflow tag
+
+.. |twitter| image:: https://img.shields.io/badge/social-Twitter-informational.svg
+   :target: https://twitter.com/RIOT_OS
+   :alt: Twitter
+
+.. |wiki| image:: https://img.shields.io/badge/docs-Wiki-informational.svg
+   :target: https://github.com/RIOT-OS/RIOT/wiki
+   :alt: Wiki
