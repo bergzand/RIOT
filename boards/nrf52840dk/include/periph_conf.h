@@ -37,12 +37,6 @@ static const spi_conf_t spi_config[] = {
         .mosi = GPIO_PIN(1, 13),
         .miso = GPIO_PIN(1, 14),
     },
-    {
-        .dev  = NRF_SPIM2,
-        .sclk = GPIO_PIN(0, 19),
-        .mosi = GPIO_PIN(0, 20),
-        .miso = GPIO_PIN(0, 21),
-    }
 };
 #define SPI_NUMOF           ARRAY_SIZE(spi_config)
 /** @} */
@@ -78,6 +72,25 @@ static const uart_conf_t uart_config[] = {
 #define UART_1_ISR          (isr_uarte1)
 
 #define UART_NUMOF          ARRAY_SIZE(uart_config)
+/** @} */
+
+/**
+ * @name    QSPI configuration
+ * @{
+ */
+static const qspi_conf_t qspi_config[] = {
+    {
+        .dev    = NRF_QSPI,
+        .cs     = GPIO_PIN(0, 17),
+        .sclk   = GPIO_PIN(0, 19),
+        .io0    = GPIO_PIN(0, 20),
+        .io1    = GPIO_PIN(0, 21),
+        .io2    = GPIO_PIN(0, 22),
+        .io3    = GPIO_PIN(0, 23)
+    }
+};
+
+#define QSPI_NUMOF          ARRAY_SIZE(qspi_config)
 /** @} */
 
 #ifdef __cplusplus
