@@ -215,6 +215,17 @@ typedef struct {
 #endif
 } spi_conf_t;
 
+#ifdef CPU_MODEL_NRF52840XXAA
+typedef struct {
+    NRF_QSPI_Type *dev; /**< QSPI device used */
+    gpio_t cs;          /**< Chip select pin */
+    gpio_t sclk;        /**< CLK pin */
+    gpio_t io0;         /**< Data line 0 */
+    gpio_t io1;         /**< Data line 1 */
+    gpio_t io2;         /**< Data line 2 */
+    gpio_t io3;         /**< Data line 3 */
+} qspi_conf_t;
+#endif
 
 /**
  * @brief Common SPI/I2C interrupt callback
