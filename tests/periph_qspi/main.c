@@ -25,6 +25,7 @@
 #include "od.h"
 #include "periph/qspi.h"
 #include "shell.h"
+#include "macros/units.h"
 
 static qspi_t _get_dev(int argc, char **argv, bool *oob)
 {
