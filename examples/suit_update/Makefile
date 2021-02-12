@@ -40,7 +40,7 @@ QUIET ?= 1
 #
 
 USEMODULE += nanocoap_sock sock_util
-USEMODULE += suit suit_transport_coap suit_storage_flashwrite
+USEMODULE += suit suit_transport_coap
 
 # Display a progress bar during firmware download
 USEMODULE += progress_bar
@@ -53,6 +53,16 @@ CFLAGS += -DSUIT_MANIFEST_RESOURCE=\"$(SUIT_COAP_ROOT)/$(SUIT_NOTIFY_MANIFEST)\"
 
 # Enable test_utils_interactive_sync, only used when running automatic test
 DEFAULT_MODULE += test_utils_interactive_sync
+
+ifeq ($(BOARD),native)
+  USE_ETHOS ?= 0
+  USEMODULE += suit_storage_ram
+  USEMODULE += gnrc_netdev_default
+  # Configure two RAM regions with 2K each
+  CFLAGS += -DCONFIG_SUIT_STORAGE_RAM_REGIONS=2 -DCONFIG_SUIT_STORAGE_RAM_SIZE=2048
+else
+  USEMODULE += suit_storage_flashwrite
+endif
 
 # Change this to 0 to not use ethos
 USE_ETHOS ?= 1
