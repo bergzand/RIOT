@@ -28,23 +28,7 @@ extern "C" {
 #endif
 
 /**
- * @brief CLIC registry offset helper
- */
-#define CLIC_REGP(offset)   ((volatile uint32_t *) ((CLIC_BASE_ADDR) + (offset)))
-
-/**
- * @name CLIC configuration registers
- * @{
- */
-#define CLIC_CFG        *((volatile uint8_t*)CLIC_REGP(0x0))
-#define CLIC_INFO       *((volatile uint32_t*)CLIC_REGP(0x4)
-#define CLIC_MTH        *((volatile uint8_t*)CLIC_REGP(0xb)
-#define CLIC_INT_ADDR   CLIC_REGP(0x1000)
-#define CLIC_INT        ((volatile eclic_clicint_t *)CLIC_INT_ADDR)
-/** @} */
-
-/**
- * @brief   PLIC callback declaration
+ * @brief   CLIC callback declaration
  *
  * @param   irq     Interrupt number
  */

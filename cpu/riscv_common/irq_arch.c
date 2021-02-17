@@ -29,9 +29,7 @@
 #include "panic.h"
 #include "sched.h"
 #include "plic.h"
-#if IS_ACTIVE(MODULE_PERIPH_CLIC)
 #include "clic.h"
-#endif
 
 #include "vendor/riscv_csr.h"
 
@@ -68,9 +66,9 @@ void riscv_irq_init(void)
     if (IS_ACTIVE(MODULE_PERIPH_PLIC)) {
         plic_init();
     }
-#ifdef MODULE_PERIPH_CLIC
-    clic_init();
-#endif
+    if (IS_ACTIVE(MODULE_PERIPH_CLIC)) {
+        clic_init();
+    }
 
     /* Enable external interrupts */
     set_csr(mie, MIP_MEIP);
@@ -108,12 +106,13 @@ void handle_trap(uint32_t mcause)
             break;
 
         default:
-#ifdef MODULE_PERIPH_CLIC
-            clic_isr_handler(trap);
-#else
-            /* Unknown interrupt */
-            core_panic(PANIC_GENERAL_ERROR, "Unhandled interrupt");
-#endif
+            if (IS_ACTIVE(MODULE_PERIPH_CLIC)) {
+                clic_isr_handler(trap);
+            }
+            else {
+                /* Unknown interrupt */
+                core_panic(PANIC_GENERAL_ERROR, "Unhandled interrupt");
+            }
             break;
         }
     }
