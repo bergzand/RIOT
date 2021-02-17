@@ -32,9 +32,9 @@
  * in order to mask parity bit.
  */
 static struct {
-    uart_rx_cb_t rx_cb;   /**< data received interrupt callback */
-    void *arg;            /**< argument to both callback routines */
-    uint8_t data_mask;    /**< mask applied to the data register */
+    uart_rx_cb_t rx_cb;     /**< data received interrupt callback */
+    void *arg;              /**< argument to both callback routines */
+    uint8_t data_mask;      /**< mask applied to the data register */
 } isr_ctx[UART_NUMOF];
 
 
@@ -45,7 +45,7 @@ static inline USART_Type *dev(uart_t uart)
 
 static inline void uart_init_pins(uart_t uart, uart_rx_cb_t rx_cb)
 {
-     /* configure TX pin */
+    /* configure TX pin */
     gpio_init_af(uart_config[uart].tx_pin, GPIO_AF_OUT_PP);
     /* configure RX pin */
     if (rx_cb) {
@@ -83,8 +83,8 @@ int uart_init(uart_t uart, uint32_t baudrate, uart_rx_cb_t rx_cb, void *arg)
     assert(uart < UART_NUMOF);
 
     /* save ISR context */
-    isr_ctx[uart].rx_cb     = rx_cb;
-    isr_ctx[uart].arg       = arg;
+    isr_ctx[uart].rx_cb = rx_cb;
+    isr_ctx[uart].arg = arg;
     isr_ctx[uart].data_mask = 0xFF;
 
     uart_enable_clock(uart);
@@ -125,23 +125,23 @@ int uart_mode(uart_t uart, uart_data_bits_t data_bits, uart_parity_t parity,
 
     if (parity) {
         switch (data_bits) {
-            case UART_DATA_BITS_6:
-                data_bits = UART_DATA_BITS_7;
-                isr_ctx[uart].data_mask = 0x3F;
-                break;
-            case UART_DATA_BITS_7:
-                data_bits = UART_DATA_BITS_8;
-                isr_ctx[uart].data_mask = 0x7F;
-                break;
-            case UART_DATA_BITS_8:
+        case UART_DATA_BITS_6:
+            data_bits = UART_DATA_BITS_7;
+            isr_ctx[uart].data_mask = 0x3F;
+            break;
+        case UART_DATA_BITS_7:
+            data_bits = UART_DATA_BITS_8;
+            isr_ctx[uart].data_mask = 0x7F;
+            break;
+        case UART_DATA_BITS_8:
 #ifdef USART_CTL0_M0
-                data_bits = USART_CTL0_M0;
+            data_bits = USART_CTL0_M0;
 #else
-                data_bits = USART_CTL0_M;
+            data_bits = USART_CTL0_M;
 #endif
-                break;
-            default:
-                return UART_NOMODE;
+            break;
+        default:
+            return UART_NOMODE;
         }
     }
     if ((data_bits & UART_INVALID_MODE) || (parity & UART_INVALID_MODE)) {

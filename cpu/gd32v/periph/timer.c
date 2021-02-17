@@ -22,7 +22,7 @@
 #include "cpu.h"
 #include "periph/timer.h"
 
-#define ENABLE_DEBUG        (0)
+#define ENABLE_DEBUG 0
 #include "debug.h"
 
 /**
@@ -56,7 +56,7 @@ static inline TIMER_Type *dev(tim_t tim)
 /**
  * @brief   Bitmap for compare channel disable after match
  */
-static uint8_t _oneshot[(TIMER_NUMOF+1)/2];
+static uint8_t _oneshot[(TIMER_NUMOF + 1) / 2];
 
 /**
  * @brief   Clear interrupt enable after the interrupt has fired
@@ -112,13 +112,14 @@ int timer_init(tim_t tim, unsigned long freq, timer_cb_t cb, void *arg)
     periph_clk_en(timer_config[tim].bus, timer_config[tim].rcu_mask);
 
     /* configure the timer as upcounter in continuous mode */
-    dev(tim)->CTL0  = 0;
-    dev(tim)->CTL1  = 0;
-    dev(tim)->CAR  = timer_config[tim].max;
+    dev(tim)->CTL0 = 0;
+    dev(tim)->CTL1 = 0;
+    dev(tim)->CAR = timer_config[tim].max;
 
     /* set prescaler */
     dev(tim)->PSC = (((periph_apb_clk(timer_config[tim].bus) * 2) / freq) - 1);
-    DEBUG("[timer]: %"PRIu32"/%lu =  %"PRIu16"\n", periph_apb_clk(timer_config[tim].bus), freq, dev(tim)->PSC)
+    DEBUG("[timer]: %" PRIu32 "/%lu =  %" PRIu16 "\n",
+          periph_apb_clk(timer_config[tim].bus), freq, dev(tim)->PSC)
 
     /* generate an update event to apply our configuration */
     dev(tim)->SWEVG = TIMER0_SWEVG_UPG_Msk;
@@ -156,7 +157,8 @@ int timer_set_absolute(tim_t tim, int channel, unsigned int value)
 }
 
 #ifdef MODULE_PERIPH_TIMER_PERIODIC
-int timer_set_periodic(tim_t tim, int channel, unsigned int value, uint8_t flags)
+int timer_set_periodic(tim_t tim, int channel, unsigned int value,
+                       uint8_t flags)
 {
     if (channel >= (int)TIMER_CHANNEL_NUMOF) {
         return -1;
@@ -170,7 +172,7 @@ int timer_set_periodic(tim_t tim, int channel, unsigned int value, uint8_t flags
         dev(tim)->CNT = 0;
 
         /* wait for the interrupt & clear it */
-        while(dev(tim)->INTF == 0) {}
+        while (dev(tim)->INTF == 0) {}
         dev(tim)->INTF = 0;
 
         irq_restore(state);
@@ -223,6 +225,7 @@ static void _irq_handler(tim_t tim)
 {
     uint32_t top = dev(tim)->CAR;
     uint32_t status = dev(tim)->INTF & dev(tim)->DMAINTEN;
+
     dev(tim)->INTF = 0;
 
     for (unsigned int i = 0; status; i++) {
@@ -250,29 +253,29 @@ static void _irq_handler(tim_t tim)
 
 static void timer_isr(unsigned irq)
 {
-    switch(irq) {
+    switch (irq) {
 #ifdef TIMER_0_IRQN
-        case TIMER_0_IRQN:
-            _irq_handler(0);
-            break;
+    case TIMER_0_IRQN:
+        _irq_handler(0);
+        break;
 #endif
 #ifdef TIMER_1_IRQN
-        case TIMER_1_IRQN:
-            _irq_handler(1);
-            break;
+    case TIMER_1_IRQN:
+        _irq_handler(1);
+        break;
 #endif
 #ifdef TIMER_2_IRQN
-        case TIMER_2_IRQN:
-            _irq_handler(2);
-            break;
+    case TIMER_2_IRQN:
+        _irq_handler(2);
+        break;
 #endif
 #ifdef TIMER_3_IRQN
-        case TIMER_3_IRQN:
-            _irq_handler(3);
-            break;
+    case TIMER_3_IRQN:
+        _irq_handler(3);
+        break;
 #endif
-        default:
-            assert(false);
+    default:
+        assert(false);
     }
 }
 
@@ -310,4 +313,3 @@ void TIMER_4_ISR(void)
     irq_handler(4);
 }
 #endif
-

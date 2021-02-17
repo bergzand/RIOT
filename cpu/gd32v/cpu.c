@@ -20,54 +20,54 @@
 #include "periph_cpu.h"
 #include "periph_conf.h"
 
-#define ENABLE_DEBUG (0)
+#define ENABLE_DEBUG 0
 #include "debug.h"
 
 void periph_clk_en(bus_t bus, uint32_t mask)
 {
     switch (bus) {
-        case AHB:
-            cpu_reg_enable_bits(&RCU->AHBEN, mask);
-            break;
-        case APB1:
-            cpu_reg_enable_bits(&RCU->APB1EN, mask);
-            break;
-        case APB2:
-            cpu_reg_enable_bits(&RCU->APB2EN, mask);
-            break;
-        default:
-            DEBUG("unsupported bus %d\n", (int)bus);
-            break;
+    case AHB:
+        cpu_reg_enable_bits(&RCU->AHBEN, mask);
+        break;
+    case APB1:
+        cpu_reg_enable_bits(&RCU->APB1EN, mask);
+        break;
+    case APB2:
+        cpu_reg_enable_bits(&RCU->APB2EN, mask);
+        break;
+    default:
+        DEBUG("unsupported bus %d\n", (int)bus);
+        break;
     }
 }
 
 void periph_clk_dis(bus_t bus, uint32_t mask)
 {
     switch (bus) {
-        case AHB:
-            cpu_reg_disable_bits(&RCU->AHBEN, mask);
-            break;
-        case APB1:
-            cpu_reg_disable_bits(&RCU->APB1EN, mask);
-            break;
-        case APB2:
-            cpu_reg_disable_bits(&RCU->APB2EN, mask);
-            break;
-        default:
-            DEBUG("unsupported bus %d\n", (int)bus);
-            break;
+    case AHB:
+        cpu_reg_disable_bits(&RCU->AHBEN, mask);
+        break;
+    case APB1:
+        cpu_reg_disable_bits(&RCU->APB1EN, mask);
+        break;
+    case APB2:
+        cpu_reg_disable_bits(&RCU->APB2EN, mask);
+        break;
+    default:
+        DEBUG("unsupported bus %d\n", (int)bus);
+        break;
     }
 }
 
 uint32_t periph_apb_clk(bus_t bus)
 {
     switch (bus) {
-        case AHB:
-            return CLOCK_AHB;
-        case APB1:
-            return CLOCK_APB1;
-        case APB2:
-            return CLOCK_APB2;
+    case AHB:
+        return CLOCK_AHB;
+    case APB1:
+        return CLOCK_APB1;
+    case APB2:
+        return CLOCK_APB2;
     }
     return 0;
 }
@@ -82,4 +82,3 @@ void cpu_init(void)
     stdio_init();
     periph_init();
 }
-

@@ -30,6 +30,5 @@ void pm_reboot(void)
     wdt_setup_reboot(0, 1);
     wdt_start();
     wdt_kick();
-    while(1) {}
+    while (1) {}
 }
-

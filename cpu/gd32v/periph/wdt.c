@@ -56,7 +56,8 @@ extern "C" {
 /* wdt_time (us) = LSI(us) x 4 x 2^PRE x RELOAD */
 static inline uint32_t _wdt_time(uint8_t pre, uint16_t rel)
 {
-    return (uint32_t)(((uint64_t) US_PER_SEC * 4 * (1 << pre) * rel ) / CLOCK_LSI);
+    return (uint32_t)(((uint64_t)US_PER_SEC * 4 * (1 << pre) * rel) /
+                      CLOCK_LSI);
 }
 #endif
 
@@ -92,6 +93,7 @@ static uint8_t _find_prescaler(uint32_t rst_time)
 {
     /* Divide by the range to get power of 2 of the prescaler */
     uint8_t pre = bitarithm_msb(rst_time / FWDGT_STEP_MS) + 1;
+
     DEBUG("[wdt]: prescaler value %d\n", pre);
     return pre;
 }
@@ -100,7 +102,8 @@ static uint16_t _find_reload_value(uint8_t pre, uint32_t rst_time)
 {
     /* Calculate best reload value = rst_time / LSI(ms) x 4 x 2^PRE */
     uint16_t rel = (uint16_t)((rst_time * CLOCK_LSI) / \
-                             ((uint32_t) (US_PER_MS * 4 * (1 << pre))));
+                              ((uint32_t)(US_PER_MS * 4 * (1 << pre))));
+
     DEBUG("[wdt]: reload value %d\n", rel);
     return rel;
 }
@@ -117,7 +120,7 @@ void wdt_kick(void)
 
 void wdt_setup_reboot(uint32_t min_time, uint32_t max_time)
 {
-    (void) min_time;
+    (void)min_time;
     /* Windowed wdt not supported */
     assert(min_time == 0);
 

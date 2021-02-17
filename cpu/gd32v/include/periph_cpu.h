@@ -51,19 +51,19 @@ typedef enum {
  */
 enum {
 #ifdef GPIOA
-    PORT_A = 0,             /**< port A */
+    PORT_A  = 0,            /**< port A */
 #endif
 #ifdef GPIOB
-    PORT_B = 1,             /**< port B */
+    PORT_B  = 1,            /**< port B */
 #endif
 #ifdef GPIOC
-    PORT_C = 2,             /**< port C */
+    PORT_C  = 2,            /**< port C */
 #endif
 #ifdef GPIOD
-    PORT_D = 3,             /**< port D */
+    PORT_D  = 3,            /**< port D */
 #endif
 #ifdef GPIOE
-    PORT_E = 4,             /**< port E */
+    PORT_E  = 4,            /**< port E */
 #endif
 };
 
@@ -103,26 +103,26 @@ typedef uint32_t gpio_t;
  */
 #define HAVE_GPIO_MODE_T
 typedef enum {
-    GPIO_IN    = GPIO_MODE(0, 1, 0),    /**< input w/o pull R */
-    GPIO_IN_PD = GPIO_MODE(0, 2, 0),    /**< input with pull-down */
-    GPIO_IN_PU = GPIO_MODE(0, 2, 1),    /**< input with pull-up */
-    GPIO_OUT   = GPIO_MODE(3, 0, 0),    /**< push-pull output */
-    GPIO_OD    = GPIO_MODE(3, 1, 0),    /**< open-drain w/o pull R */
-    GPIO_OD_PU = (0xff)                 /**< not supported by HW */
+    GPIO_IN     = GPIO_MODE(0, 1, 0),   /**< input w/o pull R */
+    GPIO_IN_PD  = GPIO_MODE(0, 2, 0),   /**< input with pull-down */
+    GPIO_IN_PU  = GPIO_MODE(0, 2, 1),   /**< input with pull-up */
+    GPIO_OUT    = GPIO_MODE(3, 0, 0),   /**< push-pull output */
+    GPIO_OD     = GPIO_MODE(3, 1, 0),   /**< open-drain w/o pull R */
+    GPIO_OD_PU  = (0xff)                /**< not supported by HW */
 } gpio_mode_t;
 /** @} */
 #endif /* ndef DOXYGEN */
 
 typedef enum {
-    GPIO_AF_OUT_PP = 0xb,   /**< alternate function output - push-pull */
-    GPIO_AF_OUT_OD = 0xf,   /**< alternate function output - open-drain */
+    GPIO_AF_OUT_PP  = 0xb,  /**< alternate function output - push-pull */
+    GPIO_AF_OUT_OD  = 0xf,  /**< alternate function output - open-drain */
 } gpio_af_t;
 
 /**
  * @brief   Timer configuration
  */
 typedef struct {
-    TIMER_Type *dev;       /**< timer device */
+    TIMER_Type *dev;        /**< timer device */
     uint32_t max;           /**< maximum value to count to (16/32 bit) */
     uint32_t rcu_mask;      /**< corresponding bit in the RCC register */
     uint8_t bus;            /**< APBx bus the timer is clock from */
@@ -133,7 +133,7 @@ typedef struct {
  * @brief   Structure for UART configuration data
  */
 typedef struct {
-    USART_Type *dev;     /**< UART device base register address */
+    USART_Type *dev;        /**< UART device base register address */
     uint32_t rcu_mask;      /**< bit in clock enable register */
     gpio_t rx_pin;          /**< RX pin */
     gpio_t tx_pin;          /**< TX pin */
@@ -141,7 +141,7 @@ typedef struct {
     gpio_af_t tx_af;        /**< alternate function for TX pin */
     uint8_t bus;            /**< APB bus */
     uint8_t irqn;           /**< IRQ channel */
-    clic_isr_cb_t isr;     /**< ISR callback */
+    clic_isr_cb_t isr;      /**< ISR callback */
 } uart_conf_t;
 
 /**
@@ -211,8 +211,8 @@ typedef struct {
  */
 #define NWDT_TIME_LOWER_LIMIT           (1)
 /* Ensure the internal "count" variable stays within the uint32 bounds.
-  This variable corresponds to max_time * RTC_FREQ / MS_PER_SEC. On fe310,
-  RTC_FREQ is 32768Hz. The 15 right shift is equivalent to a division by RTC_FREQ.
+   This variable corresponds to max_time * RTC_FREQ / MS_PER_SEC. On fe310,
+   RTC_FREQ is 32768Hz. The 15 right shift is equivalent to a division by RTC_FREQ.
  */
 #define NWDT_TIME_UPPER_LIMIT           ((UINT32_MAX >> 15)  * MS_PER_SEC + 1)
 /** @} */

@@ -22,18 +22,18 @@
 
 
 /* TODO move to board periph_conf */
-#define CLOCK_HXTAL         1
+#define CLOCK_HXTAL          1
 
-#define CLOCK_AHB_DIV       0 /* Max speed at 108 MHz */
-#define CLOCK_APB1_DIV      (0x04 |0) /* Max speed at 54 MHz */
-#define CLOCK_APB2_DIV      (0x0 | 0) /* Max speed at 108 MHz */
+#define CLOCK_AHB_DIV        0          /* Max speed at 108 MHz */
+#define CLOCK_APB1_DIV       (0x04 | 0) /* Max speed at 54 MHz */
+#define CLOCK_APB2_DIV       (0x0 | 0)  /* Max speed at 108 MHz */
 
 #define CLOCK_AHB_DIV_CONF   (CLOCK_AHB_DIV << RCU_CFG0_AHBPSC_Pos)
 #define CLOCK_APB1_DIV_CONF  (CLOCK_APB1_DIV << RCU_CFG0_APB1PSC_Pos)
 #define CLOCK_APB2_DIV_CONF  (CLOCK_APB2_DIV << RCU_CFG0_APB2PSC_Pos)
 
-#define PREDV0_CONF             1 /* Divide by 2 */
-#define PLL_MULT_FACTOR        26 /* Multiply by 26 */
+#define PREDV0_CONF          1  /* Divide by 2 */
+#define PLL_MULT_FACTOR      26 /* Multiply by 26 */
 
 #define RCU_CFG0_SCS_IRC8    (0 << RCU_CFG0_SCS_Pos)
 #define RCU_CFG0_SCS_HXTAL   (1 << RCU_CFG0_SCS_Pos)
@@ -61,7 +61,8 @@ void gd32vf103_clock_init(void)
      * configure the AHB and APB clock dividers as configure by the board */
     RCU->CFG0 = (RCU_CFG0_SCS_IRC8 | CLOCK_AHB_DIV_CONF |
                  CLOCK_APB1_DIV_CONF | CLOCK_APB2_DIV_CONF);
-    while ((RCU->CFG0 & RCU_CFG0_SCSS_Msk) != (RCU_CFG0_SCS_IRC8 << RCU_CFG0_SCSS_Pos)) {}
+    while ((RCU->CFG0 & RCU_CFG0_SCSS_Msk) !=
+           (RCU_CFG0_SCS_IRC8 << RCU_CFG0_SCSS_Pos)) {}
 
     /* disable all active clocks except IRC8 -> resets the clk configuration */
     RCU->CTL = (RCU_CTL_IRC8MEN_Msk);
@@ -74,7 +75,7 @@ void gd32vf103_clock_init(void)
     RCU->CFG1 = (PREDV0_CONF);
 
     RCU->CFG0 |= (CLOCK_HXTAL << RCU_CFG0_PLLSEL_Pos) |
-                 ((PLL_MULT_FACTOR & 0xf)<< RCU_CFG0_PLLMF_3_0_Pos) |
+                 ((PLL_MULT_FACTOR & 0xf) << RCU_CFG0_PLLMF_3_0_Pos) |
                  ((PLL_MULT_FACTOR & 0x10) << (RCU_CFG0_PLLMF_4_Pos - 4));
 
     RCU->CTL |= (RCU_CTL_PLLEN_Msk);
@@ -86,6 +87,7 @@ void gd32vf103_clock_init(void)
     RCU->CFG0 |= RCU_CFG0_SCS_PLL;
 
 
-    while ((RCU->CFG0 & RCU_CFG0_SCSS_Msk) != (RCU_CFG0_SCS_PLL << RCU_CFG0_SCSS_Pos)) {}
+    while ((RCU->CFG0 & RCU_CFG0_SCSS_Msk) !=
+           (RCU_CFG0_SCS_PLL << RCU_CFG0_SCSS_Pos)) {}
     irq_restore(is);
 }

@@ -64,6 +64,7 @@ static void _erase_page(void *page_addr)
 {
     uint16_t *dst = page_addr;
     uint32_t irc8_state = (RCU->CTL & RCU_CTL_IRC8MEN_Msk);
+
     /* the internal RC oscillator (HSI) must be enabled */
     gd32v_enable_irc8();
 
@@ -106,7 +107,7 @@ void flashpage_write_raw(void *target_addr, const void *data, size_t len)
 
     /* ensure writes are aligned */
     assert(!(((unsigned)target_addr % FLASHPAGE_RAW_ALIGNMENT) ||
-            ((unsigned)data % FLASHPAGE_RAW_ALIGNMENT)));
+             ((unsigned)data % FLASHPAGE_RAW_ALIGNMENT)));
 
     /* ensure the length doesn't exceed the actual flash size */
     assert(((unsigned)target_addr + len) <
@@ -116,6 +117,7 @@ void flashpage_write_raw(void *target_addr, const void *data, size_t len)
     const uint16_t *data_addr = data;
 
     uint32_t irc8_state = (RCU->CTL & RCU_CTL_IRC8MEN_Msk);
+
     /* the internal RC oscillator (HSI) must be enabled */
     gd32v_enable_irc8();
 

@@ -29,7 +29,7 @@
  */
 static inline GPIO_Type *_port(gpio_t pin)
 {
-    return (GPIO_Type*)(pin & ~(0x0f));
+    return (GPIO_Type *)(pin & ~(0x0f));
 }
 
 /**
@@ -72,6 +72,7 @@ static inline void _set_mode_or_af(GPIO_Type *port, unsigned pin_num,
 {
     volatile uint32_t *crl = (&port->CTL0 + (pin_num >> 3));
     uint32_t tmp = *crl;
+
     tmp &= ~(0xf << ((pin_num & 0x7) * 4));
     tmp |= ((mode_or_af & MODE_MASK) << ((pin_num & 0x7) * 4));
     *crl = tmp;
@@ -80,6 +81,7 @@ static inline void _set_mode_or_af(GPIO_Type *port, unsigned pin_num,
 static inline bool _pin_is_output(GPIO_Type *port, unsigned pin_num)
 {
     uint32_t reg = *(uint32_t *)(&port->CTL0 + (pin_num >> 3));
+
     return reg & (0x3 << ((pin_num & 0x7) << 2));
 }
 
@@ -130,7 +132,10 @@ void gpio_init_analog(gpio_t pin)
 
     /* map the pin as analog input */
     int pin_num = _pin_num(pin);
-    *(uint32_t *)(&_port(pin)->CTL0 + (pin_num >= 8)) &= ~(0xfl << (4 * (pin_num - ((pin_num >= 8) * 8))));
+
+    *(uint32_t *)(&_port(pin)->CTL0 +
+                  (pin_num >=
+                   8)) &= ~(0xfl << (4 * (pin_num - ((pin_num >= 8) * 8))));
 }
 
 int gpio_read(gpio_t pin)
@@ -232,6 +237,7 @@ void isr_exti(void)
 {
     /* only generate interrupts against lines which have their IMR set */
     uint32_t pending_isr = (EXTI->PR & EXTI->IMR);
+
     for (unsigned i = 0; i < GPIO_ISR_CHAN_NUMOF; i++) {
         if (pending_isr & (1 << i)) {
             EXTI->PR = (1 << i);        /* clear by writing a 1 */
