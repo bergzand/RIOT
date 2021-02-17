@@ -28,10 +28,10 @@
 extern "C" {
 #endif
 
-#define CLOCK_CORECLOCK     MHZ(104)
-#define CLOCK_AHB           CLOCK_CORECLOCK
-#define CLOCK_APB1          CLOCK_CORECLOCK/2
-#define CLOCK_APB2          CLOCK_CORECLOCK
+#define CLOCK_CORECLOCK     MHZ(104)           /**< CPU clock frequency in Hz */
+#define CLOCK_AHB           CLOCK_CORECLOCK    /**< Frequency of the AHB bus in Hz */
+#define CLOCK_APB1          CLOCK_CORECLOCK/2  /**< Frequency of the APB1 bus in Hz */
+#define CLOCK_APB2          CLOCK_CORECLOCK    /**< Frequency of the APB2 bus in Hz */
 
 extern void isr_timer2(unsigned irq);
 extern void isr_timer3(unsigned irq);
@@ -90,5 +90,3 @@ static const uart_conf_t uart_config[] = {
 
 #endif /* PERIPH_CONF_H */
 /** @} */
-
-
