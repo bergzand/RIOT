@@ -20,7 +20,6 @@
 #include "cpu.h"
 #include "periph_conf.h"
 
-
 /* TODO move to board periph_conf */
 #define CLOCK_HXTAL          1
 

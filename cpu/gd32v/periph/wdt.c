@@ -33,24 +33,20 @@
 #include "periph_cpu.h"
 #include "periph/wdt.h"
 
-#define ENABLE_DEBUG (0)
+#define ENABLE_DEBUG 0
 #include "debug.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #define CLOCK_LSI                   (KHZ(40))
 
-#define MAX_RELOAD                (4096U)
-#define MAX_PRESCALER             (6U)
-#define FWDGT_STEP_MS              ((4U * US_PER_MS * MAX_RELOAD) / CLOCK_LSI)
+#define MAX_RELOAD              (4096U)
+#define MAX_PRESCALER           (6U)
+#define FWDGT_STEP_MS           ((4U * US_PER_MS * MAX_RELOAD) / CLOCK_LSI)
 
-#define FWDGT_CTL_KEY_RELOAD        ((uint16_t)0xAAAA)
-#define FWDGT_CTL_KEY_ENABLE        ((uint16_t)0xCCCC)
+#define FWDGT_CTL_KEY_RELOAD    ((uint16_t)0xAAAA)
+#define FWDGT_CTL_KEY_ENABLE    ((uint16_t)0xCCCC)
 
-#define FWDGT_UNLOCK               ((uint16_t)0x5555)
-#define FWDGT_LOCK                 ((uint16_t)0x0000)
+#define FWDGT_UNLOCK            ((uint16_t)0x5555)
+#define FWDGT_LOCK              ((uint16_t)0x0000)
 
 #if ENABLE_DEBUG
 /* wdt_time (us) = LSI(us) x 4 x 2^PRE x RELOAD */
@@ -145,7 +141,3 @@ void wdt_setup_reboot(uint32_t min_time, uint32_t max_time)
     /* Refresh wdt counter */
     wdt_kick();
 }
-
-#ifdef __cplusplus
-}
-#endif
