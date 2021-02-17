@@ -29,6 +29,9 @@
 #include "panic.h"
 #include "sched.h"
 #include "plic.h"
+#if IS_ACTIVE(MODULE_PERIPH_CLIC)
+#include "clic.h"
+#endif
 
 #include "vendor/riscv_csr.h"
 
@@ -50,7 +53,13 @@ void timer_isr(void);
 void riscv_irq_init(void)
 {
     /* Setup trap handler function */
-    write_csr(mtvec, &trap_entry);
+    if (IS_ACTIVE(MODULE_PERIPH_CLIC)) {
+        /* Signal CLIC usage to the core */
+        write_csr(mtvec, (uintptr_t)&trap_entry | 0x03);
+    }
+    else {
+        write_csr(mtvec, (uintptr_t)&trap_entry);
+    }
 
     /* Clear all interrupt enables */
     write_csr(mie, 0);
@@ -59,6 +68,9 @@ void riscv_irq_init(void)
     if (IS_ACTIVE(MODULE_PERIPH_PLIC)) {
         plic_init();
     }
+#ifdef MODULE_PERIPH_CLIC
+    clic_init();
+#endif
 
     /* Enable external interrupts */
     set_csr(mie, MIP_MEIP);
@@ -76,11 +88,13 @@ void handle_trap(uint32_t mcause)
      *  calling thread_yield(). */
     riscv_in_isr = 1;
 
+    uint32_t trap = mcause & CPU_CSR_MCAUSE_CAUSE_MSK;
     /* Check for INT or TRAP */
     if ((mcause & MCAUSE_INT) == MCAUSE_INT) {
         /* Cause is an interrupt - determine type */
         switch (mcause & MCAUSE_CAUSE) {
-#ifdef MODULE_PERIPH_TIMER
+
+#ifdef MODULE_PERIPH_CORETIMER
         case IRQ_M_TIMER:
             /* Handle timer interrupt */
             timer_isr();
@@ -94,13 +108,17 @@ void handle_trap(uint32_t mcause)
             break;
 
         default:
+#ifdef MODULE_PERIPH_CLIC
+            clic_isr_handler(trap);
+#else
             /* Unknown interrupt */
             core_panic(PANIC_GENERAL_ERROR, "Unhandled interrupt");
+#endif
             break;
         }
     }
     else {
-        switch (mcause) {
+        switch (trap) {
         case CAUSE_USER_ECALL:      /* ECALL from user mode */
         case CAUSE_MACHINE_ECALL:   /* ECALL from machine mode */
         {
@@ -115,7 +133,7 @@ void handle_trap(uint32_t mcause)
         default:
 #ifdef DEVELHELP
             printf("Unhandled trap:\n");
-            printf("  mcause: 0x%" PRIx32 "\n", mcause);
+            printf("  mcause: 0x%" PRIx32 "\n", trap);
             printf("  mepc:   0x%lx\n", read_csr(mepc));
             printf("  mtval:  0x%lx\n", read_csr(mtval));
 #endif
@@ -129,7 +147,7 @@ void handle_trap(uint32_t mcause)
 
 /* Marking this as interrupt to ensure an mret at the end, provided by the
  * compiler. Aligned to 4-byte boundary as per RISC-V spec  */
-static void __attribute((aligned(4))) __attribute__((interrupt)) trap_entry(void)
+static void __attribute((aligned(64))) __attribute__((interrupt)) trap_entry(void)
 {
     __asm__ volatile (
         "addi sp, sp, -"XTSTR (CONTEXT_FRAME_SIZE)"          \n"
