@@ -22,15 +22,15 @@
 /**
  * @brief CLIC registry offset helper
  */
-#define CLIC_REGP(offset)   ((volatile uint32_t *) ((CLIC_BASE_ADDR) + (offset)))
+#define CLIC_REGP(offset)   ((volatile uint32_t *)((CLIC_BASE_ADDR) + (offset)))
 
 /**
  * @name CLIC configuration registers
  * @{
  */
-#define CLIC_CFG        *((volatile uint8_t*)CLIC_REGP(0x0))
-#define CLIC_INFO       *((volatile uint32_t*)CLIC_REGP(0x4)
-#define CLIC_MTH        *((volatile uint8_t*)CLIC_REGP(0xb)
+#define CLIC_CFG        *((volatile uint8_t *)CLIC_REGP(0x0))
+#define CLIC_INFO       *((volatile uint32_t *)CLIC_REGP(0x4)
+#define CLIC_MTH        *((volatile uint8_t *)CLIC_REGP(0xb)
 #define CLIC_INT_ADDR   CLIC_REGP(0x1000)
 #define CLIC_INT        ((volatile clic_clicint_t *)CLIC_INT_ADDR)
 /** @} */
@@ -39,8 +39,7 @@
 static clic_isr_cb_t _ext_isrs[CLIC_NUM_INTERRUPTS];
 
 void clic_init(void)
-{
-}
+{}
 
 void clic_enable_interrupt(unsigned irq)
 {
