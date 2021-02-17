@@ -48,14 +48,12 @@
 #define FWDGT_UNLOCK            ((uint16_t)0x5555)
 #define FWDGT_LOCK              ((uint16_t)0x0000)
 
-#if ENABLE_DEBUG
 /* wdt_time (us) = LSI(us) x 4 x 2^PRE x RELOAD */
-static inline uint32_t _wdt_time(uint8_t pre, uint16_t rel)
+static inline __attribute__((used)) uint32_t _wdt_time(uint8_t pre, uint16_t rel)
 {
     return (uint32_t)(((uint64_t)US_PER_SEC * 4 * (1 << pre) * rel) /
                       CLOCK_LSI);
 }
-#endif
 
 static inline void _fwdt_unlock(void)
 {
@@ -121,7 +119,7 @@ void wdt_setup_reboot(uint32_t min_time, uint32_t max_time)
     assert(min_time == 0);
 
     /* Check reset time limit */
-    assert((max_time > NWDT_TIME_LOWER_LIMIT) || \
+    assert((max_time > NWDT_TIME_LOWER_LIMIT) ||
            (max_time < NWDT_TIME_UPPER_LIMIT));
 
     RCU->RSTSCK |= RCU_RSTSCK_IRC40KEN_Msk;
@@ -134,9 +132,7 @@ void wdt_setup_reboot(uint32_t min_time, uint32_t max_time)
     _set_prescaler(pre);
     _set_reload(rel);
 
-#if ENABLE_DEBUG
     DEBUG("[wdt]: reset time %lu [us]\n", _wdt_time(pre, rel));
-#endif
 
     /* Refresh wdt counter */
     wdt_kick();
