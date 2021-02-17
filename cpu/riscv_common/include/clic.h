@@ -104,28 +104,6 @@ void clic_set_handler(unsigned irq, clic_isr_cb_t cb);
  */
 void clic_isr_handler(uint32_t irq);
 
-//#undef MIP_MSIP
-//#undef MIP_MEIP
-//#undef MIP_MTIP
-//#define MIP_MSIP    CLIC_INT_SFT
-//#define MIP_MEIP    CLIC_INT_RESERVED
-//#define MIP_MTIP    CLIC_INT_TMR
-
-static inline void write_core_irq_flags(uint32_t flag)
-{
-    (void)flag;
-}
-
-static inline void set_core_irq_flags(uint32_t flag)
-{
-    clic_enable_interrupt(flag);
-}
-
-static inline void clear_core_irq_flags(uint32_t flag)
-{
-    clic_disable_interrupt(flag);
-}
-
 #ifdef __cplusplus
 }
 #endif

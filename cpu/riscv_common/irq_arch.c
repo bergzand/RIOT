@@ -147,7 +147,7 @@ void handle_trap(uint32_t mcause)
 
 /* Marking this as interrupt to ensure an mret at the end, provided by the
  * compiler. Aligned to 4-byte boundary as per RISC-V spec  */
-static void __attribute((aligned(64))) __attribute__((interrupt)) trap_entry(void)
+static void __attribute((aligned(4))) __attribute__((interrupt)) trap_entry(void)
 {
     __asm__ volatile (
         "addi sp, sp, -"XTSTR (CONTEXT_FRAME_SIZE)"          \n"
