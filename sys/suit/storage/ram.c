@@ -23,7 +23,6 @@
 
 #include "fmt.h"
 #include "kernel_defines.h"
-#include "macros/xtstr.h"
 #include "log.h"
 
 #include "suit.h"
