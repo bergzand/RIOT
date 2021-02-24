@@ -37,6 +37,7 @@ static struct {
     uint8_t data_mask;      /**< mask applied to the data register */
 } isr_ctx[UART_NUMOF];
 
+static inline void _uart_isr(uart_t uart);
 
 static inline USART_Type *dev(uart_t uart)
 {
@@ -104,7 +105,7 @@ int uart_init(uart_t uart, uint32_t baudrate, uart_rx_cb_t rx_cb, void *arg)
 
     /* enable RX interrupt if applicable */
     if (rx_cb) {
-        clic_set_handler(uart_config[uart].irqn, uart_config[uart].isr);
+        clic_set_handler(uart_config[uart].irqn, _uart_isr);
         clic_enable_interrupt(uart_config[uart].irqn);
         dev(uart)->CTL0 = (USART_CTL0_UEN_Msk | USART_CTL0_TEN_Msk | RXENABLE);
     }
@@ -211,7 +212,7 @@ void uart_poweroff(uart_t uart)
     uart_disable_clock(uart);
 }
 
-static inline void irq_handler(uart_t uart)
+static inline void _irq_handler(uart_t uart)
 {
     uint32_t status = dev(uart)->STAT;
 
@@ -224,49 +225,40 @@ static inline void irq_handler(uart_t uart)
     }
 }
 
-void isr_usart0(unsigned irq)
+static void _uart_isr(unsigned irq)
 {
-    (void)irq;
-    irq_handler(UART_DEV(0));
-}
-
-void isr_usart1(unsigned irq)
-{
-    (void)irq;
-    irq_handler(UART_DEV(1));
-}
-
-#ifdef UART_1_ISR
-void UART_1_ISR(void)
-{
-    irq_handler(UART_DEV(1));
-}
+    switch (irq) {
+#ifdef UART_0_IRQN
+    case UART_0_IRQN:
+        _irq_handler(UART_DEV(0));
+        break;
 #endif
-
-#ifdef UART_2_ISR
-void UART_2_ISR(void)
-{
-    irq_handler(UART_DEV(2));
-}
+#ifdef UART_1_IRQN
+    case UART_1_IRQN:
+        _irq_handler(UART_DEV(1));
+        break;
 #endif
-
-#ifdef UART_3_ISR
-void UART_3_ISR(void)
-{
-    irq_handler(UART_DEV(3));
-}
+#ifdef UART_2_IRQN
+    case UART_2_IRQN:
+        _irq_handler(UART_DEV(2));
+        break;
 #endif
-
-#ifdef UART_4_ISR
-void UART_4_ISR(void)
-{
-    irq_handler(UART_DEV(4));
-}
+#ifdef UART_3_IRQN
+    case UART_3_IRQN:
+        _irq_handler(UART_DEV(3));
+        break;
 #endif
-
-#ifdef UART_5_ISR
-void UART_5_ISR(void)
-{
-    irq_handler(UART_DEV(5));
-}
+#ifdef UART_4_IRQN
+    case UART_4_IRQN:
+        _irq_handler(UART_DEV(4));
+        break;
 #endif
+#ifdef UART_5_IRQN
+    case UART_5_IRQN:
+        _irq_handler(UART_DEV(5));
+        break;
+#endif
+    default:
+        assert(false);
+    }
+}

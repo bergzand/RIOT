@@ -133,9 +133,8 @@ void gpio_init_analog(gpio_t pin)
     /* map the pin as analog input */
     int pin_num = _pin_num(pin);
 
-    *(uint32_t *)(&_port(pin)->CTL0 +
-                  (pin_num >=
-                   8)) &= ~(0xfl << (4 * (pin_num - ((pin_num >= 8) * 8))));
+    volatile uint32_t *pin_reg = (uint32_t *)(&_port(pin)->CTL0 + (pin_num >= 8));
+    *pin_reg &= ~(0xfl << (4 * (pin_num - ((pin_num >= 8) * 8))));
 }
 
 int gpio_read(gpio_t pin)

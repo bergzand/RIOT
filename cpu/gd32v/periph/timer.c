@@ -31,7 +31,7 @@
 #define TIM_CHAN(tim, chan) *(&dev(tim)->CH0CV + chan)
 #define TIMER_CHANNEL_NUMOF     (4)
 
-static void timer_isr(unsigned irq);
+static void _timer_isr(unsigned irq);
 
 /**
  * @brief   Interrupt context for each configured timer
@@ -126,7 +126,7 @@ int timer_init(tim_t tim, unsigned long freq, timer_cb_t cb, void *arg)
 
     /* enable the timer's interrupt */
     clic_enable_interrupt(timer_config[tim].irqn);
-    clic_set_handler(timer_config[tim].irqn, timer_isr);
+    clic_set_handler(timer_config[tim].irqn, _timer_isr);
 
     /* reset the counter and start the timer */
     timer_start(tim);
@@ -251,65 +251,30 @@ static void _irq_handler(tim_t tim)
     }
 }
 
-static void timer_isr(unsigned irq)
+static void _timer_isr(unsigned irq)
 {
     switch (irq) {
 #ifdef TIMER_0_IRQN
     case TIMER_0_IRQN:
-        _irq_handler(0);
+        _irq_handler(TIMER_DEV(0));
         break;
 #endif
 #ifdef TIMER_1_IRQN
     case TIMER_1_IRQN:
-        _irq_handler(1);
+        _irq_handler(TIMER_DEV(1));
         break;
 #endif
 #ifdef TIMER_2_IRQN
     case TIMER_2_IRQN:
-        _irq_handler(2);
+        _irq_handler(TIMER_DEV(2));
         break;
 #endif
 #ifdef TIMER_3_IRQN
     case TIMER_3_IRQN:
-        _irq_handler(3);
+        _irq_handler(TIMER_DEV(3));
         break;
 #endif
     default:
         assert(false);
     }
 }
-
-#ifdef TIMER_0_ISR
-void TIMER_0_ISR(void)
-{
-    irq_handler(0);
-}
-#endif
-
-#ifdef TIMER_1_ISR
-void TIMER_1_ISR(void)
-{
-    irq_handler(1);
-}
-#endif
-
-#ifdef TIMER_2_ISR
-void TIMER_2_ISR(void)
-{
-    irq_handler(2);
-}
-#endif
-
-#ifdef TIMER_3_ISR
-void TIMER_3_ISR(void)
-{
-    irq_handler(3);
-}
-#endif
-
-#ifdef TIMER_4_ISR
-void TIMER_4_ISR(void)
-{
-    irq_handler(4);
-}
-#endif
