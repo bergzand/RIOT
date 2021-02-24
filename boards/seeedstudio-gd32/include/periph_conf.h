@@ -7,9 +7,7 @@
  */
 
 /**
- * @defgroup    boards_seeedstudio-gd32 SeeedStudio GD32 RISC-V board
- * @ingroup     boards
- * @brief       Support for the SeeedStudio GD32 RISC-V board
+ * @ingroup     boards_seeedstudio-gd32
  * @{
  *
  * @file
