@@ -31,9 +31,6 @@ extern "C" {
 #define CLOCK_APB1          CLOCK_CORECLOCK/2  /**< Frequency of the APB1 bus in Hz */
 #define CLOCK_APB2          CLOCK_CORECLOCK    /**< Frequency of the APB2 bus in Hz */
 
-extern void isr_timer2(unsigned irq);
-extern void isr_timer3(unsigned irq);
-
 /**
  * @name   Timer configuration
  * @{
@@ -55,14 +52,12 @@ static const timer_conf_t timer_config[] = {
     }
 };
 
-#define TIMER_0_IRQN         TIMER2_IRQn
-#define TIMER_1_IRQN         TIMER3_IRQn
+#define TIMER_0_IRQN        TIMER2_IRQn
+#define TIMER_1_IRQN        TIMER3_IRQn
 
 #define TIMER_NUMOF         ARRAY_SIZE(timer_config)
 /** @} */
 
-extern void isr_usart1(unsigned irq);
-extern void isr_usart0(unsigned irq);
 /**
  * @name   UART configuration
  * @{
@@ -75,9 +70,10 @@ static const uart_conf_t uart_config[] = {
         .tx_pin     = GPIO_PIN(PORT_A, 9),
         .bus        = APB2,
         .irqn       = USART0_IRQn,
-        .isr        = isr_usart0
     },
 };
+
+#define UART_0_IRQN         USART0_IRQn
 
 #define UART_NUMOF          ARRAY_SIZE(uart_config)
 /** @} */
