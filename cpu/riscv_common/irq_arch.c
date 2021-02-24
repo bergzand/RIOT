@@ -75,6 +75,8 @@ void riscv_irq_init(void)
 
     /*  Set default state of mstatus */
     set_csr(mstatus, MSTATUS_DEFAULT);
+
+    irq_enable();
 }
 
 /**
@@ -145,8 +147,9 @@ void handle_trap(uint32_t mcause)
 }
 
 /* Marking this as interrupt to ensure an mret at the end, provided by the
- * compiler. Aligned to 4-byte boundary as per RISC-V spec  */
-static void __attribute((aligned(4))) __attribute__((interrupt)) trap_entry(void)
+ * compiler. Aligned to 64-byte boundary as per RISC-V spec and required by some
+ * of the supported platforms (gd32)*/
+static void __attribute((aligned(64))) __attribute__((interrupt)) trap_entry(void)
 {
     __asm__ volatile (
         "addi sp, sp, -"XTSTR (CONTEXT_FRAME_SIZE)"          \n"
