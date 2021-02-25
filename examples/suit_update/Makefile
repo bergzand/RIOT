@@ -56,12 +56,8 @@ DEFAULT_MODULE += test_utils_interactive_sync
 
 ifeq ($(BOARD),native)
   USE_ETHOS ?= 0
-  USEMODULE += suit_storage_ram
-  USEMODULE += gnrc_netdev_default
   # Configure two RAM regions with 2K each
   CFLAGS += -DCONFIG_SUIT_STORAGE_RAM_REGIONS=2 -DCONFIG_SUIT_STORAGE_RAM_SIZE=2048
-else
-  USEMODULE += suit_storage_flashwrite
 endif
 
 # Change this to 0 to not use ethos

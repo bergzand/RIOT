@@ -501,6 +501,17 @@ capability is removed. Instead two in-memory slots are created that can be
 updated with new payloads. These act as a demonstrator for the SUIT
 capabilities.
 
+The steps described here show how to use SUIT manifests to deliver content
+updates to a RIOT instance. The full workflow is described, including the setup
+of simple infrastructure.
+
+The steps are as follow: First the network configuration is done. A CoAP server
+is started to host the files for the RIOT instance. The necessary keys to sign
+the manifest with are generated. After this the RIOT native instance is compiled
+and launched. With this infrastructure running, the content and the manifest is
+generated. Finally the RIOT instance is instructed to fetch the manifest and
+update the storage location with the content.
+
 ### Workflow
 
 While the above examples use make targets to create and submit the manifest,
@@ -527,10 +538,10 @@ On the bridge device `tapbr0` an routable IP address is added such as
 `2001:db8::1/64`:
 
 ```console
-$ ip address add 2001:db8::1/64 dev tapbr0
+$ sudo ip address add 2001:db8::1/64 dev tapbr0
 ```
 
-#### Starting the coap server
+#### Starting the CoAP server
 
 As mentioned above, a CoAP server is required to allow the native instance to
 retrieve the manifest and payload. The `aiocoap-fileserver` is used for this,
@@ -549,6 +560,24 @@ Public and private keys can be generated as described in the
 [Signing key management][key-management] section. In this example the key is
 stored in the `keys` directory.
 
+#### Building the example
+
+Before the natice instance can be started, it must be compiled first.
+Compilation can be started from the root of your RIOT directory with:
+
+```
+$ make BOARD=native -C examples/suit_update
+```
+
+Then start the example with:
+
+```console
+$ make BOARD=native -C examples/suit_update term
+```
+
+This starts an instance of the suit_update example as a process on your
+computer. It can be stopped by pressing `ctrl+c` from within the application.
+
 #### Exploring the native instance
 
 The native instance has two shell commands to inspect the storage backends for
@@ -564,6 +593,8 @@ RAM slot 1: ".ram.1"
 ```
 
 As shown above, two storage locations are available, `.ram.0` and `.ram.1`.
+While two slots are available, in this example only the content of the `.ram.0`
+slot will be updated.
 
 - The `storage-content` command can be used to display a hex dump command of one
   of the storage locations. It requires a location string, an offset and a
@@ -584,9 +615,9 @@ used in this example:
 $ echo "AABBCCDD" > coaproot/payload.bin
 ```
 
-Make sure to store it in the directory selected for the coap file server.
+Make sure to store it in the directory selected for the CoAP file server.
 
-Next, a manifest template is created. This manifest template is a json file that
+Next, a manifest template is created. This manifest template is a JSON file that
 acts as a template for the real SUIT manifest. Within RIOT, the script
 `dist/tools/suit/gen_manifest.py` is used.
 
@@ -605,7 +636,7 @@ used on a native instance, it is set to zero here. The location within a SUIT
 manifest is an array of path components. Which character is used to separate
 these path components is out of the scope of the SUIT manifest. The
 `gen_manifest.py` command uses colons (`:`) to separate these components.
-Withint the manifest this will show up as an array containing `[ "ram", "0" ]`.
+Within the manifest this will show up as an array containing `[ "ram", "0" ]`.
 
 The content of this template file should look like this:
 
@@ -653,7 +684,7 @@ This generates the manifest in SUIT CBOR format. The content can be inspected by
 using the `parse` subcommand:
 
 ```console
-$ dist/tools/suit/suit-manifest-generator/bin/suit-tool parse -m suit_manifest
+$ dist/tools/suit/suit-manifest-generator/bin/suit-tool parse -m coaproot/suit_manifest
 ```
 
 The manifest generated doesn't have an authentication wrapper, it is unsigned
@@ -661,7 +692,7 @@ and will not pass inspection on the device or RIOT instance. The manifest can be
 signed with the `sign` subcommand together with the keys generated earlier.
 
 ```console
-$ dist/tools/suit/suit-manifest-generator/bin/suit-tool sign -k keys/default.pem -m coaproot/suit_manifest -o coaproot/suit_manifest.sign
+$ dist/tools/suit/suit-manifest-generator/bin/suit-tool sign -k keys/default.pem -m coaproot/suit_manifest -o coaproot/suit_manifest.signed
 ```
 
 This generates an authentication to the manifest. This is visible when
@@ -694,10 +725,10 @@ suit_coap: downloading "coap://[2001:db8::1]/suit_manifest.signed"
 suit_coap: got manifest with size 278
 suit: verifying manifest signature
 suit: validated manifest version
-)Retrieved sequence number: 0
+Retrieved sequence number: 0
 Manifest seq_no: 1, highest available: 0
 suit: validated sequence number
-)Formatted component name: .ram.0
+Formatted component name: .ram.0
 validating vendor ID
 Comparing 547d0d74-6d3a-5a92-9662-4881afd9407b to 547d0d74-6d3a-5a92-9662-4881afd9407b from manifest
 validating vendor ID: OK
@@ -725,7 +756,8 @@ same payload as suggested above was used, it should look like this:
 ```
 
 The process can be done multiple times with both slot `.ram.0` and `.ram.1` and
-different payloads.
+different payloads. Keep in mind that the sequence number is a strict
+monotonically number and must be increased after every update.
 
 ## Detailed explanation
 [detailed-explanation]: #Detailed-explanation
