@@ -3,8 +3,8 @@
 
 The SUIT update example is compatible with the native application to try out the
 update process without requiring separate hardware. While it is not possible to
-update the running code in the application, the workflow can still be used to
-update an in-memory storage.
+update the running code in the application, the workflow can be used to
+update memory-backed storage.
 
 ## Description
 
@@ -74,7 +74,7 @@ Public and private keys can be generated as described in the
 [Signing key management][key-management] section. In this example the key is
 stored in the `keys` directory.
 
-### Building the example
+### Building and starting the example
 
 Before the natice instance can be started, it must be compiled first.
 Compilation can be started from the root of your RIOT directory with:
@@ -91,6 +91,18 @@ $ BOARD=native make -C examples/suit_update term
 
 This starts an instance of the suit_update example as a process on your
 computer. It can be stopped by pressing `ctrl+c` from within the application.
+
+The instance must also be provided with a routable IP address in the same range
+configured on the `tapbr0` interface on the host. In the RIOT shell, this can be
+done with:
+
+```console
+> ifconfig 5 add 2001:db8::2/64
+```
+
+Where 5 is the interface number of the interface shown with the `ifconfig`
+command.
+
 
 ### Exploring the native instance
 
@@ -110,12 +122,12 @@ As shown above, two storage locations are available, `.ram.0` and `.ram.1`.
 While two slots are available, in this example only the content of the `.ram.0`
 slot will be updated.
 
-- The `storage-content` command can be used to display a hex dump command of one
+- The `storage_content` command can be used to display a hex dump command of one
   of the storage locations. It requires a location string, an offset and a
   number of bytes to print:
+
 ```console
-> storage-content .ram.0 0 64
-storage-content .ram.0 0 64
+> storage_content .ram.0 0 64
 
 ```
 As the storage location is empty on boot, nothing is printed.
@@ -265,7 +277,7 @@ The storage location can now be inspected using the built-in command. If the
 same payload as suggested above was used, it should look like this:
 
 ```Console
-> storage-content .ram.0 0 64
+> storage_content .ram.0 0 64
 41414242434344440A
 ```
 
