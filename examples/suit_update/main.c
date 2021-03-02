@@ -129,7 +129,10 @@ static int cmd_print_slot_content(int argc, char **argv)
     suit_storage_t *storage = suit_storage_find_by_id(slot);
     if (!storage) {
         printf("No storage with id \"%s\" present\n", slot);
+        return -1;
     }
+
+    suit_storage_set_active_location(storage, slot);
 
     if (suit_storage_has_readptr(storage)) {
         const uint8_t *buf;
@@ -169,7 +172,7 @@ static const shell_command_t shell_commands[] = {
     { "current-slot", "Print current slot number", cmd_print_current_slot },
     { "riotboot-hdr", "Print current slot header", cmd_print_riotboot_hdr },
 #endif
-    { "storage-content", "Print the slot content", cmd_print_slot_content },
+    { "storage_content", "Print the slot content", cmd_print_slot_content },
     { "lsstorage", "Print the available storage paths",
         cmd_lsstorage },
     { NULL, NULL, NULL }
