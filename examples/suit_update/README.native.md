@@ -17,6 +17,8 @@ The steps described here show how to use SUIT manifests to deliver content
 updates to a RIOT instance. The full workflow is described, including the setup
 of simple infrastructure.
 
+![Native execution steps](https://raw.githubusercontent.com/RIOT-OS/RIOT/master/example/suit_update/native_steps.svg?sanitize=true)
+
 The steps are as follow: First the network configuration is done. A CoAP server
 is started to host the files for the RIOT instance. The necessary keys to sign
 the manifest with are generated. After this the RIOT native instance is compiled
