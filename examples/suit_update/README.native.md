@@ -1,12 +1,65 @@
 # Testing Without Hardware
-[testing-without-hardware]: #testing-without-hardware
 
 The SUIT update example is compatible with the native application to try out the
 update process without requiring separate hardware. While it is not possible to
 update the running code in the application, the workflow can be used to
 update memory-backed storage.
 
-## Description
+- [Quickest start][quickest-start]
+- [Introduction][introduction]
+- [Workflow][workflow]
+  - [Setting up networking][setting-up-networking]
+  - [Starting the CoAP server][starting-the-coap-server]
+  - [Building and starting the example][building-and-starting-the-example]
+  - [Exploring the native instance][exploring-the-native-instance]
+  - [Generating the payload and manifest][generating-the-payload-and-manifest]
+  - [Updating the storage location][updating-the-storage-location]
+
+## Quickest start
+[quickest-start]: #quickest-start
+
+1. Set up networking with:
+```console
+$ sudo dist/tools/tapsetup/tapsetup -c
+$ sudo ip address add 2001:db8::1/64 dev tapbr0
+```
+
+2. Start a CoAP server in a separate shell and leave it running:
+```
+$ aiocoap-fileserver coaproot
+```
+
+3. Build and start the native instance:
+```
+$ BOARD=native make -C examples/suit_update all term
+```
+   and add an address from the same range to the interface in RIOT
+```console
+> ifconfig 5 add 2001:db8::2/64
+```
+
+4. Generate a payload and a signed manifest for the payload:
+```console
+$ echo "AABBCCDD" > coaproot/payload.bin
+$ dist/tools/suit/gen_manifest.py --urlroot coap://[2001:db8::1]/ --seqnr 1 -o suit.tmp coaproot/payload.bin:0:ram:0
+$ dist/tools/suit/suit-manifest-generator/bin/suit-tool create -f suit -i suit.tmp -o coaproot/suit_manifest
+$ dist/tools/suit/suit-manifest-generator/bin/suit-tool sign -k keys/default.pem -m coaproot/suit_manifest -o coaproot/suit_manifest.signed
+```
+
+5. Pull the manifest from the native instance:
+```
+> suit coap://[2001:db8::1]/suit_manifest.signed
+```
+
+6. Verify the content of the storage location
+
+```Console
+> storage_content .ram.0 0 64
+41414242434344440A
+```
+
+## Introduction
+[introduction]: #introduction
 
 When building the example application for the native target, the firmware update
 capability is removed. Instead two in-memory slots are created that can be
@@ -17,7 +70,7 @@ The steps described here show how to use SUIT manifests to deliver content
 updates to a RIOT instance. The full workflow is described, including the setup
 of simple infrastructure.
 
-![Native execution steps](https://raw.githubusercontent.com/RIOT-OS/RIOT/master/example/suit_update/native_steps.svg?sanitize=true)
+![Native execution steps](native_steps.svg?sanitize=true)
 
 The steps are as follow: First the network configuration is done. A CoAP server
 is started to host the files for the RIOT instance. The necessary keys to sign
@@ -27,6 +80,7 @@ generated. Finally the RIOT instance is instructed to fetch the manifest and
 update the storage location with the content.
 
 ## Workflow
+[workflow]: #workflow
 
 While the above examples use make targets to create and submit the manifest,
 this workflow aims to provide a better view of the SUIT manifest and signature
@@ -34,12 +88,17 @@ workflow. Because of this the steps below use the low level scripts to manually
 creates a payload and manifest and sign it.
 
 ### Setting up networking
+[setting-up-networking]: #setting-up-networking
 
 To deliver the payload to the native instance, a network connection between a
 coap server and the instance is required.
 
 First a bridge with two tap devices is created:
 
+echo "AABBCCDD" > coaproot/payload.bin
+dist/tools/suit/gen_manifest.py --urlroot coap://[2001:db8::1]/ --seqnr 1 -o suit.tmp coaproot/payload.bin:0:ram:0
+dist/tools/suit/suit-manifest-generator/bin/suit-tool create -f suit -i suit.tmp -o coaproot/suit_manifest
+dist/tools/suit/suit-manifest-generator/bin/suit-tool sign -k keys/default.pem -m coaproot/suit_manifest -o coaproot/suit_manifest.signed
 ```console
 $ sudo dist/tools/tapsetup/tapsetup -c
 ```
@@ -56,6 +115,7 @@ $ sudo ip address add 2001:db8::1/64 dev tapbr0
 ```
 
 ### Starting the CoAP server
+[starting-the-coap-server]: #starting-the-coap-server
 
 As mentioned above, a CoAP server is required to allow the native instance to
 retrieve the manifest and payload. The `aiocoap-fileserver` is used for this,
@@ -68,13 +128,8 @@ $ aiocoap-fileserver coaproot
 This should be left running in the background. A different directory can be used
 if preferred.
 
-### Key generation
-
-Public and private keys can be generated as described in the
-[Signing key management][key-management] section. In this example the key is
-stored in the `keys` directory.
-
 ### Building and starting the example
+[building-and-starting-the-example]: #building-and-starting-the-example
 
 Before the natice instance can be started, it must be compiled first.
 Compilation can be started from the root of your RIOT directory with:
@@ -105,6 +160,7 @@ command.
 
 
 ### Exploring the native instance
+[exploring-the-native-instance]: #exploring-the-native-instance
 
 The native instance has two shell commands to inspect the storage backends for
 the payloads.
@@ -133,6 +189,7 @@ slot will be updated.
 As the storage location is empty on boot, nothing is printed.
 
 ### Generating the payload and manifest
+[generating-the-payload-and-manifest]: #generating-the-payload-and-manifest
 
 To update the storage location we first need a payload. A trivial payload is
 used in this example:
@@ -227,17 +284,17 @@ submitted to the instance so it can retrieve it and in turn retrieve the
 component payload specified by the manifest.
 
 ### Updating the storage location
+[updating-the-storage-location]: #updating-the-storage-location
 
-The update process is a two stage process where first the instance receives the
-URL for the manifest. It will download the manifest and verify the content.
-After the manifest is verified, it will proceed with executing the command
-sequences in the manifest and download the payload when instructed to.
+The update process is a two stage process where first the instance pulls in the
+manifest via a supplied url. It will download the manifest and verify the
+content. After the manifest is verified, it will proceed with executing the
+command sequences in the manifest and download the payload when instructed to.
 
-The URL for the manifest can be submitted to the host with any coap client. In
-this example the `coap-client` from libcoap is used:
+The URL for the manifest can be supplied to the instance via the command line.
 
 ```console
-$ coap-client coap://[2001:db8::2]/suit/trigger -m post -e 'coap://[2001:db8::1]/suit_manifest.signed'
+> suit coap://[2001:db8::1]/suit_manifest.signed
 ```
 
 The payload is the full URL to the signed manifest. The native instance should
@@ -245,10 +302,10 @@ respond on this by downloading and executing the manifest. If all went well, the
 output of the native instance should look something like this:
 
 ```
-suit: received URL: "coap://[2001:db8::1]/suit_manifest.signed"
+suit coap://[2001:db8::1]/suit_manifest.signed
 suit_coap: trigger received
 suit_coap: downloading "coap://[2001:db8::1]/suit_manifest.signed"
-suit_coap: got manifest with size 278
+suit_coap: got manifest with size 276
 suit: verifying manifest signature
 suit: validated manifest version
 Retrieved sequence number: 0
