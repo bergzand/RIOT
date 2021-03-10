@@ -14,7 +14,6 @@ to update binaries on RIOT.
 Table of Contents:
 
 - [Prerequisites][prerequisites]
-  - [Ble][prerequisites-ble]
   - [Signing key management][key-management]
 - [workflows][workflows]
 
@@ -56,11 +55,6 @@ Table of Contents:
   See [update] for more information.
 
 
-### Ble
-[prerequisites-ble]: #Ble
-
-Make sure you fulfill the "Prerequisites" and "Preparing Linux" section in [README.ipv6-over-ble.md](../../pkg/nimble/README.ipv6-over-ble.md).
-
 ### Key Management
 [key-management]: #Key-management
 
@@ -81,4 +75,4 @@ SUIT workflow on a RIOT native instance on Linux.
 The workflow described aims to update the firmware on real-world hardware.
 
 - [SUIT on RIOT native](README.native.md)
-- [SUIT on hardware](README.harware.md)
+- [SUIT on hardware](README.hardware.md)

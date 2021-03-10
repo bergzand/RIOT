@@ -145,7 +145,7 @@ the prefix (`2001:db8::`) and the EUI64 suffix, in this case `7b7e:3255:1313:8d9
 
 ### Alternative: Setup a wireless ble device and Linux host
 
-- Complete [Ble][prerequisites-ble].
+- Make sure you fulfill the "Prerequisites" and "Preparing Linux" section in [README.ipv6-over-ble.md](../../pkg/nimble/README.ipv6-over-ble.md).
 
 - Provision the wireless ble device:
 
