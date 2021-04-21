@@ -35,6 +35,10 @@ ifneq (,$(filter bpf,$(USEMODULE)))
   USEMODULE += memarray
 endif
 
+ifneq (,$(filter sched_rbpf,$(USEMODULE)))
+  USEMODULE += sched_cb
+endif
+
 ifneq (,$(filter lwip_%,$(USEMODULE)))
   USEPKG += lwip
 endif
