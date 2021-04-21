@@ -330,6 +330,10 @@ ifneq (,$(filter schedstatistics,$(USEMODULE)))
   USEMODULE += sched_cb
 endif
 
+ifneq (,$(filter sched_rbpf,$(USEMODULE)))
+  USEMODULE += sched_cb
+endif
+
 ifneq (,$(filter saul_reg,$(USEMODULE)))
   USEMODULE += saul
 endif
