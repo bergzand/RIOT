@@ -56,7 +56,7 @@ int bpf_verify_preflight(bpf_t *bpf)
     for (bpf_instruction_t *i = (bpf_instruction_t*)bpf->application;
             i < (bpf_instruction_t*)(bpf->application + bpf->application_len); i++) {
         /* Check if register values are valid */
-        if (i->dst >= 10 || i->src >= 11) {
+        if (i->dst >= 11 || i->src >= 11) {
             return BPF_ILLEGAL_REGISTER;
         }
 
