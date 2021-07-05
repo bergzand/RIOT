@@ -75,6 +75,7 @@ static void tests_bpf_run1(void)
     uint32_t stop = xtimer_now_usec();
 
     TEST_ASSERT_EQUAL_INT(0, res);
+    TEST_ASSERT_EQUAL_INT(0x5bac8c3d, (uint32_t)result);
     printf("Result: %"PRIx32"\n", (uint32_t)result);
     printf("duration: %"PRIu32" us -> %"PRIu32" us/exec\n",
            (stop - start), (stop - start)/1000);
