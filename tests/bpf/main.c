@@ -25,9 +25,9 @@
 #include "bpf/store.h"
 #include "embUnit.h"
 
-#include "sample.h"
-#include "sample_storage.h"
-#include "sample_saul.h"
+#include "blob/bpf/sample.bin.h"
+#include "blob/bpf/sample_storage.bin.h"
+#include "blob/bpf/sample_saul.bin.h"
 
 #define BPF_SAMPLE_STORAGE_KEY_A  5
 #define BPF_SAMPLE_STORAGE_KEY_B  15
@@ -59,8 +59,8 @@ static void tests_bpf_run_ctx(void)
 static void tests_bpf_storage(void)
 {
     bpf_t bpf = {
-        .application = bpf_sample_storage_bin,
-        .application_len = sizeof(bpf_sample_storage_bin),
+        .application = sample_storage_bin,
+        .application_len = sizeof(sample_storage_bin),
         .stack = _bpf_stack,
         .stack_size = sizeof(_bpf_stack),
     };
@@ -92,8 +92,8 @@ static void tests_bpf_storage(void)
 static void tests_bpf_saul(void)
 {
     bpf_t bpf = {
-        .application = bpf_sample_saul_bin,
-        .application_len = sizeof(bpf_sample_saul_bin),
+        .application = sample_saul_bin,
+        .application_len = sizeof(sample_saul_bin),
         .stack = _bpf_stack,
         .stack_size = sizeof(_bpf_stack),
     };

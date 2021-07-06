@@ -10,4 +10,7 @@ USEMODULE += saul_default
 
 CFLAGS += -I$(CURDIR)
 
+
+BLOBS += $(wildcard bpf/*.bin)
+
 include $(RIOTBASE)/Makefile.include
