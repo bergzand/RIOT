@@ -22,7 +22,7 @@
 #define SCHED_RBPF
 
 #include <stdint.h>
-#include "kernel_types.h"
+#include "kernel_defines.h"
 #include "bpf.h"
 
 #ifdef __cplusplus
