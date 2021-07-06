@@ -62,7 +62,18 @@ void bpf_setup(bpf_t *bpf)
     bpf->stack_region.start = bpf->stack;
     bpf->stack_region.len = bpf->stack_size;
     bpf->stack_region.flag = (BPF_MEM_REGION_READ | BPF_MEM_REGION_WRITE);
-    bpf->stack_region.next = &bpf->arg_region;
+    bpf->stack_region.next = &bpf->data_region;
+
+    bpf->data_region.start = rbpf_data(bpf);
+    bpf->data_region.len = rbpf_header(bpf)->data_len;
+    bpf->data_region.flag = (BPF_MEM_REGION_READ | BPF_MEM_REGION_WRITE);
+    bpf->data_region.next = &bpf->rodata_region;
+
+    bpf->rodata_region.start = rbpf_rodata(bpf);
+    bpf->rodata_region.len = rbpf_header(bpf)->rodata_len;
+    bpf->rodata_region.flag = BPF_MEM_REGION_READ;
+    bpf->rodata_region.next = &bpf->arg_region;
+
     bpf->arg_region.next = NULL;
     bpf->arg_region.start = NULL;
     bpf->arg_region.len = 0;
@@ -104,7 +115,7 @@ int bpf_hook_execute(bpf_hook_trigger_t trigger, void *ctx, size_t ctx_size, int
     int res = BPF_OK;
 
     for (bpf_hook_t *h = _hooks[trigger]; h; h = h->next) {
-        res = bpf_execute(h->application, ctx, ctx_size, script_res);
+        res = bpf_execute_ctx(h->application, ctx, ctx_size, script_res);
         h->executions++;
         if ((res == BPF_OK) && !_continue(h, script_res)) {
             break;

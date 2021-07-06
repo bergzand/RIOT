@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2020 Inria
- * Copyright (C) 2020 Koen Zandberg <koen@bergzand.net>
+ * Copyright (C) 2021 Inria
+ * Copyright (C) 2021 Koen Zandberg <koen@bergzand.net>
  *
  * This file is subject to the terms and conditions of the GNU Lesser
  * General Public License v2.1. See the file LICENSE in the top level
@@ -42,6 +42,23 @@ extern "C" {
 
 #define BPF_STACK_SIZE  512
 
+#define RBPF_MAGIC_NO 0x72425046 /**< Magic header number: "rBPF" */
+
+typedef struct __attribute__((packed)) {
+    uint32_t magic;      /**< Magic number */
+    uint32_t version;    /**< Version of the application */
+    uint32_t flags;
+    uint32_t data_len;   /**< Length of the data section */
+    uint32_t rodata_len; /**< Length of the rodata section */
+    uint32_t text_len;   /**< Length of the text section */
+    uint32_t functions;  /**< Number of functions available */
+} rbpf_header_t;
+
+typedef struct __attribute__((packed)) {
+    uint16_t name_offset; /**< Offset in the rodata for the name */
+    uint16_t flags;       /**< Flags for this function */
+    uint16_t location_offset; /**< Location in the text section where the function starts */
+} rbpf_function_t;
 
 typedef enum {
     BPF_POLICY_CONTINUE,            /**< Always execute next hook */
@@ -89,6 +106,8 @@ struct bpf_mem_region {
 
 typedef struct {
     bpf_mem_region_t stack_region;
+    bpf_mem_region_t rodata_region;
+    bpf_mem_region_t data_region;
     bpf_mem_region_t arg_region;
     const uint8_t *application; /**< Application bytecode */
     size_t application_len;     /**< Application length */
@@ -96,7 +115,6 @@ typedef struct {
     size_t stack_size;          /**< VM stack size in bytes */
     btree_t btree;              /**< Local btree */
     uint16_t flags;
-    uint32_t instruction_count;
     uint32_t branches_remaining; /**< Number of allowed branch instructions remaining */
 } bpf_t;
 
@@ -126,6 +144,35 @@ void bpf_add_region(bpf_t *bpf, bpf_mem_region_t *region,
 
 int bpf_store_allowed(const bpf_t *bpf, void *addr, size_t size);
 int bpf_load_allowed(const bpf_t *bpf, void *addr, size_t size);
+
+static inline rbpf_header_t *rbpf_header(const bpf_t *bpf)
+{
+    return (rbpf_header_t*)bpf->application;
+}
+
+static inline void *rbpf_rodata(const bpf_t *bpf)
+{
+    rbpf_header_t *header = rbpf_header(bpf);
+    return (uint8_t*)header + sizeof(rbpf_header_t) + header->data_len;
+}
+
+static inline void *rbpf_data(const bpf_t *bpf)
+{
+    rbpf_header_t *header = rbpf_header(bpf);
+    return (uint8_t*)header + sizeof(rbpf_header_t);
+}
+
+static inline void *rbpf_text(const bpf_t *bpf)
+{
+    rbpf_header_t *header = rbpf_header(bpf);
+    return (uint8_t*)header + sizeof(rbpf_header_t) + header->data_len + header->rodata_len;
+}
+
+static inline size_t rbpf_text_len(const bpf_t *bpf)
+{
+    rbpf_header_t *header = rbpf_header(bpf);
+    return header->text_len;
+}
 
 #ifdef __cplusplus
 }

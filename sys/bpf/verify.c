@@ -44,17 +44,19 @@ static bool _bpf_check_call(uint32_t num)
 
 int bpf_verify_preflight(bpf_t *bpf)
 {
+    const bpf_instruction_t *application = rbpf_text(bpf);
+    size_t length = rbpf_text_len(bpf);
     if (bpf->flags & BPF_FLAG_PREFLIGHT_DONE) {
         return BPF_OK;
     }
 
-    if (bpf->application_len & 0x7) {
+    if (length & 0x7) {
         return BPF_ILLEGAL_LEN;
     }
 
 
-    for (bpf_instruction_t *i = (bpf_instruction_t*)bpf->application;
-            i < (bpf_instruction_t*)(bpf->application + bpf->application_len); i++) {
+    for (const bpf_instruction_t *i = application;
+            i < (bpf_instruction_t*)((uint8_t*)application + length); i++) {
         /* Check if register values are valid */
         if (i->dst >= 11 || i->src >= 11) {
             return BPF_ILLEGAL_REGISTER;
@@ -71,8 +73,8 @@ int bpf_verify_preflight(bpf_t *bpf)
             intptr_t target = (intptr_t)(i + i->offset);
             /* Check if the jump target is within bounds. The address is
              * incremented after the jump by the regular PC increase */
-            if ((target >= (intptr_t)(bpf->application + bpf->application_len))
-                || (target < (intptr_t)bpf->application)) {
+            if ((target >= (intptr_t)((uint8_t*)application + length))
+                || (target < (intptr_t)application)) {
                 return BPF_ILLEGAL_JUMP;
             }
         }
@@ -84,11 +86,10 @@ int bpf_verify_preflight(bpf_t *bpf)
         }
     }
 
-    size_t num_instructions = bpf->application_len/sizeof(bpf_instruction_t);
-    const bpf_instruction_t *instr = (const bpf_instruction_t*)bpf->application;
+    size_t num_instructions = length/sizeof(bpf_instruction_t);
 
     /* Check if the last instruction is a return instruction */
-    if (instr[num_instructions - 1].opcode != 0x95 && !(bpf->flags & BPF_CONFIG_NO_RETURN)) {
+    if (application[num_instructions - 1].opcode != 0x95 && !(bpf->flags & BPF_CONFIG_NO_RETURN)) {
         return BPF_NO_RETURN;
     }
     bpf->flags |= BPF_FLAG_PREFLIGHT_DONE;
