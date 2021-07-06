@@ -346,7 +346,6 @@ const shell_command_t _shell_command_list[] = {
 #ifdef MODULE_DFPLAYER
     {"dfplayer", "Control a DFPlayer Mini MP3 player", _sc_dfplayer},
 #endif
-<<<<<<< HEAD
 #ifdef MODULE_CONGURE_TEST
     { "cong_clear", "Clears CongURE state object", congure_test_clear_state },
     { "cong_setup", "Calls the setup function for the CongURE state object",
