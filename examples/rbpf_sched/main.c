@@ -22,7 +22,7 @@
 #include "msg.h"
 
 #include "net/gcoap.h"
-#include "kernel_types.h"
+#include "kernel_defines.h"
 #include "shell.h"
 
 #include "bpf.h"
