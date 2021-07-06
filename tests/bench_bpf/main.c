@@ -26,7 +26,7 @@
 #include "embUnit.h"
 #include "xtimer.h"
 
-#include "fletcher32_bpf.h"
+#include "blob/bpf/fletcher32_bpf.bin.h"
 
 static const unsigned char wrap_around_data[] =
         "AD3Awn4kb6FtcsyE0RU25U7f55Yncn3LP3oEx9Gl4qr7iDW7I8L6Pbw9jNnh0sE4DmCKuc"
@@ -55,8 +55,8 @@ static void tests_bpf_run1(void)
         .words = sizeof(wrap_around_data)/2,
     };
     bpf_t bpf = {
-        .application = bpf_fletcher32_bpf_bin,
-        .application_len = sizeof(bpf_fletcher32_bpf_bin),
+        .application = fletcher32_bpf_bin,
+        .application_len = sizeof(fletcher32_bpf_bin),
         .stack = _bpf_stack,
         .stack_size = sizeof(_bpf_stack),
     };
