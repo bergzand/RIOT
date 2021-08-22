@@ -160,50 +160,56 @@ static uint16_t calc_rank(gnrc_rpl_dodag_t *dodag, uint16_t base_rank)
     (void) base_rank;
     DEBUG("MRHOF: Calculating rank\n");
 
-    /* TODO: consider a parent set of more than 1 parent */
     if (dodag == NULL) {
         DEBUG("MRHOF: No dodag, assuming max rank\n");
         return GNRC_RPL_INFINITE_RANK;
     }
-    else {
-        gnrc_rpl_parent_t *elt = NULL;
-        netstats_nb_t elt_stats;
-        uint8_t cnt = 0;
-        uint8_t max_dagrank = 0;
-        uint16_t cost_rank, minhoprankincr = dodag->instance->min_hop_rank_inc;
 
-        /* Determine the path cost through the preferred parent */
-        if (!_mrhof_get_stats(dodag->parents, &elt_stats)) {
-            DEBUG("MRHOF: No stats for parent, assuming max rank\n");
-            return GNRC_RPL_INFINITE_RANK;
-        }
-        cost_rank = _mrhof_get_path_cost(dodag->parents, &elt_stats);
+    gnrc_rpl_parent_t *elt = NULL;
+    netstats_nb_t elt_stats;
+    uint8_t cnt = 0;
+    uint8_t max_dagrank = 0;
+    uint16_t cost_rank, minhoprankincr = dodag->instance->min_hop_rank_inc;
 
-        /* Determine the largest dagrank in the parent set */
-        LL_FOREACH(dodag->parents, elt) {
-            if (cnt >= MRHOF_PARENT_SET_SIZE) {
-                break;
-            }
-            _mrhof_get_stats(elt, &elt_stats);
-            /* Only include parent in the parent set if the statistics are acceptable
-             * and the path cost is not significantly worse than the current preferred parent */
-            if (_mrhof_is_acceptable(elt, &elt_stats) && \
-                (_mrhof_get_path_cost(elt, &elt_stats) <= cost_rank + MRHOF_PARENT_SWITCH_THRESHOLD)) {
-                uint8_t new_dagrank = DAGRANK(elt->rank, minhoprankincr);
-                if (max_dagrank < new_dagrank) {
-                    max_dagrank = new_dagrank;
-                }
-            }
-            else {
-                /* Break when parents are no longer acceptable */
-                break;
-            }
-            cnt++;
-        }
-        uint16_t monotonic_rank = minhoprankincr * (max_dagrank + 1);
-        DEBUG("MRHOF: Path cost: %u, monotonic cost: %u\n", cost_rank, monotonic_rank);
-        return (cost_rank > monotonic_rank) ? cost_rank : monotonic_rank;
+    /* Determine the path cost through the preferred parent */
+    if (!_mrhof_get_stats(dodag->parents, &elt_stats)) {
+        DEBUG("MRHOF: No stats for parent, assuming max rank\n");
+        return GNRC_RPL_INFINITE_RANK;
     }
+
+    /* calculate rank for path through the preferred parent */
+    cost_rank = _mrhof_get_path_cost(dodag->parents, &elt_stats);
+
+    /* Determine the Rank of the member of the parent set with the highest
+     * advertised Rank, rounded to the next higher integral Rank, i.e.,
+     * to MinHopRankIncrease * (1 + floor(Rank/MinHopRankIncrease)).
+     */
+    LL_FOREACH(dodag->parents, elt) {
+        if (cnt >= MRHOF_PARENT_SET_SIZE) {
+            break;
+        }
+        _mrhof_get_stats(elt, &elt_stats);
+        /* Only include parent in the parent set if the statistics are acceptable
+         * and the path cost is not significantly worse than the current preferred parent */
+        if (_mrhof_is_acceptable(elt, &elt_stats) && \
+            (_mrhof_get_path_cost(elt, &elt_stats) <= cost_rank + MRHOF_PARENT_SWITCH_THRESHOLD)) {
+            uint8_t new_dagrank = elt->rank / minhoprankincr;
+            if (max_dagrank < new_dagrank) {
+                max_dagrank = new_dagrank;
+            }
+        }
+        else {
+            /* Break when parents are no longer acceptable */
+            break;
+        }
+        cnt++;
+    }
+    uint16_t monotonic_rank = minhoprankincr * (max_dagrank + 1);
+
+    /* TODO: consider a parent set of more than 1 parent */
+
+    DEBUG("MRHOF: Path cost: %u, monotonic cost: %u\n", cost_rank, monotonic_rank);
+    return (cost_rank > monotonic_rank) ? cost_rank : monotonic_rank;
 }
 
 /**
