@@ -142,8 +142,9 @@ int bpf_install_hook(bpf_t *bpf);
 void bpf_add_region(bpf_t *bpf, bpf_mem_region_t *region,
                     void *start, size_t len, uint8_t flags);
 
-int bpf_store_allowed(const bpf_t *bpf, void *addr, size_t size);
-int bpf_load_allowed(const bpf_t *bpf, void *addr, size_t size);
+int bpf_store_allowed(const bpf_t *bpf, const void *addr, size_t size);
+int bpf_load_allowed(const bpf_t *bpf, const void *addr, size_t size);
+int bpf_loadstore_allowed(const bpf_t *bpf, const void *addr, size_t size);
 
 static inline rbpf_header_t *rbpf_header(const bpf_t *bpf)
 {

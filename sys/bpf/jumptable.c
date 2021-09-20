@@ -52,14 +52,20 @@ static inline int _check_store(const bpf_t *bpf, uint8_t size, const intptr_t ad
     return _check_mem(bpf, size, addr, BPF_MEM_REGION_WRITE);
 }
 
-int bpf_store_allowed(const bpf_t *bpf, void *addr, size_t size)
+int bpf_store_allowed(const bpf_t *bpf, const void *addr, size_t size)
 {
     return _check_store(bpf, size, (intptr_t)addr);
 }
 
-int bpf_load_allowed(const bpf_t *bpf, void *addr, size_t size)
+int bpf_load_allowed(const bpf_t *bpf, const void *addr, size_t size)
 {
     return _check_load(bpf, size, (intptr_t)addr);
+}
+
+int bpf_loadstore_allowed(const bpf_t *bpf, const void *addr, size_t size)
+{
+    return _check_mem(bpf, size, (intptr_t)addr,
+                      BPF_MEM_REGION_READ | BPF_MEM_REGION_WRITE);
 }
 
 static bpf_call_t _bpf_get_call(uint32_t num)
@@ -470,12 +476,7 @@ OPCODE_CALL:
     {
         bpf_call_t call = _bpf_get_call(instr->immediate);
         if (call) {
-            regmap[0] = (*(call))(bpf,
-                                  regmap[1],
-                                  regmap[2],
-                                  regmap[3],
-                                  regmap[4],
-                                  regmap[5]);
+            regmap[0] = (*(call))(bpf, regmap);
             CONT;
         }
         else {
