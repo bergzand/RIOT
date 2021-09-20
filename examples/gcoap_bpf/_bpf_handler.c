@@ -30,6 +30,7 @@ static gcoap_listener_t _listener = {
     &_resources[0],
     ARRAY_SIZE(_resources),
     NULL,
+    NULL,
     NULL
 };
 
@@ -109,7 +110,7 @@ static ssize_t _bpf_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len, void *ctx
     bpf_setup(&_bpf);
     int64_t result = -1;
     uint32_t start = xtimer_now_usec();
-    int res = bpf_execute(&_bpf, &bpf_ctx, sizeof(bpf_ctx), &result);
+    int res = bpf_execute_ctx(&_bpf, &bpf_ctx, sizeof(bpf_ctx), &result);
     uint32_t stop = xtimer_now_usec();
     printf("Execution done res=%i, result=%i\n", res, (int)result);
     printf("duration: %"PRIu32" us\n",
