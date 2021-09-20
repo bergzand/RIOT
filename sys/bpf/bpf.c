@@ -13,6 +13,9 @@
 #include "bpf.h"
 #include "bpf/store.h"
 
+#define ENABLE_DEBUG (0)
+#include "debug.h"
+
 extern int bpf_run(bpf_t *bpf, const void *ctx, int64_t *result);
 
 static bpf_hook_t *_hooks[BPF_HOOK_NUM] = { 0 };
@@ -122,4 +125,37 @@ int bpf_hook_execute(bpf_hook_trigger_t trigger, void *ctx, size_t ctx_size, int
         }
     }
     return res;
+}
+
+static int _check_mem(const bpf_t *bpf, uint8_t size, const void *addr, uint8_t type)
+{
+    const void *end = addr + size;
+    for (const bpf_mem_region_t *region = &bpf->stack_region; region; region = region->next) {
+        if ((addr >= (region->start)) &&
+                (end <= (region->start + region->len)) &&
+                (region->flag & type)) {
+
+            return 0;
+        }
+    }
+
+    DEBUG("Denied access to %p with len %u\n",(void*)addr, end - addr);
+    return -1;
+}
+
+
+int bpf_store_allowed(const bpf_t *bpf, const void *addr, size_t size)
+{
+    return _check_mem(bpf, size, addr, BPF_MEM_REGION_WRITE);
+}
+
+int bpf_load_allowed(const bpf_t *bpf, const void *addr, size_t size)
+{
+    return _check_mem(bpf, size, addr, BPF_MEM_REGION_READ);
+}
+
+int bpf_loadstore_allowed(const bpf_t *bpf, const void *addr, size_t size)
+{
+    return _check_mem(bpf, size, addr,
+                      BPF_MEM_REGION_READ | BPF_MEM_REGION_WRITE);
 }

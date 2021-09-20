@@ -17,6 +17,7 @@
 #include "bpf/instruction.h"
 #include "bpf/store.h"
 #include "bpf/shared.h"
+#include "bpf/call.h"
 #include "xtimer.h"
 
 #ifdef MODULE_GCOAP
@@ -34,6 +35,60 @@
 uint32_t _reg(const uint64_t *regmap, size_t num)
 {
     return regmap[num];
+}
+
+bpf_call_t bpf_call_get(uint32_t num)
+{
+    switch(num) {
+        case BPF_FUNC_BPF_PRINTF:
+            return &bpf_vm_printf;
+        case BPF_FUNC_BPF_MEMCPY:
+            return &bpf_vm_memcpy;
+        case BPF_FUNC_BPF_STORE_LOCAL:
+            return &bpf_vm_store_local;
+        case BPF_FUNC_BPF_STORE_GLOBAL:
+            return &bpf_vm_store_global;
+        case BPF_FUNC_BPF_FETCH_LOCAL:
+            return &bpf_vm_fetch_local;
+        case BPF_FUNC_BPF_FETCH_GLOBAL:
+            return &bpf_vm_fetch_global;
+#ifdef MODULE_XTIMER
+        case BPF_FUNC_BPF_NOW_MS:
+            return &bpf_vm_now_ms;
+#endif
+#ifdef MODULE_SAUL_REG
+        case BPF_FUNC_BPF_SAUL_REG_FIND_NTH:
+            return &bpf_vm_saul_reg_find_nth;
+        case BPF_FUNC_BPF_SAUL_REG_FIND_TYPE:
+            return &bpf_vm_saul_reg_find_type;
+        case BPF_FUNC_BPF_SAUL_REG_READ:
+            return &bpf_vm_saul_reg_read;
+#endif
+#ifdef MODULE_GCOAP
+        case BPF_FUNC_BPF_GCOAP_RESP_INIT:
+            return &bpf_vm_gcoap_resp_init;
+        case BPF_FUNC_BPF_COAP_OPT_FINISH:
+            return &bpf_vm_coap_opt_finish;
+        case BPF_FUNC_BPF_COAP_ADD_FORMAT:
+            return &bpf_vm_coap_add_format;
+        case BPF_FUNC_BPF_COAP_GET_PDU:
+            return &bpf_vm_coap_get_pdu;
+#endif
+#ifdef MODULE_FMT
+        case BPF_FUNC_BPF_FMT_S16_DFP:
+            return &bpf_vm_fmt_s16_dfp;
+        case BPF_FUNC_BPF_FMT_U32_DEC:
+            return &bpf_vm_fmt_u32_dec;
+#endif
+#ifdef MODULE_ZTIMER
+        case BPF_FUNC_BPF_ZTIMER_NOW:
+            return &bpf_vm_ztimer_now;
+        case BPF_FUNC_BPF_ZTIMER_PERIODIC_WAKEUP:
+            return &bpf_vm_ztimer_periodic_wakeup;
+#endif
+        default:
+            return NULL;
+    }
 }
 
 uint32_t bpf_vm_printf(bpf_t *bpf, const uint64_t *regmap)

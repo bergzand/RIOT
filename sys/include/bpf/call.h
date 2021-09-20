@@ -46,6 +46,8 @@ FUNC_BINDING(bpf_vm_coap_get_pdu);
 FUNC_BINDING(bpf_vm_ztimer_now);
 FUNC_BINDING(bpf_vm_ztimer_periodic_wakeup);
 
+bpf_call_t bpf_call_get(uint32_t num);
+
 #ifdef __cplusplus
 }
 #endif

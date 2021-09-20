@@ -95,7 +95,7 @@ typedef struct bpf_mem_region bpf_mem_region_t;
 
 struct bpf_mem_region {
     bpf_mem_region_t *next;
-    const uint8_t *start;
+    const void *start;
     size_t len;
     uint8_t flag;
 };
