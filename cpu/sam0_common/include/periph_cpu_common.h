@@ -814,6 +814,11 @@ typedef struct {
 #endif
 
 /**
+ * @brief USBDEV buffers must be word aligned because of DMA restrictions
+ */
+#define USBDEV_CPU_DMA_REQUIREMENTS    __attribute__((aligned(4)))
+
+/**
  * @brief USB peripheral parameters
  */
 #if defined(USB_INST_NUM) || defined(DOXYGEN)
