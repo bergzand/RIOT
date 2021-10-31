@@ -78,6 +78,11 @@ extern "C" {
 #define USBUS_CDCECM_EP_DATA_SIZE  64
 
 /**
+ * @brief Full ethernet frame rounded up to a whole number of transfers
+ */
+#define USBUS_ETHERNET_FRAME_BUF    (1536)
+
+/**
  * @brief notification state, used to track which information must be send to
  * the host
  */
@@ -115,7 +120,7 @@ typedef struct usbus_cdcecm_device {
     /**
      * @brief Buffer for received frames
      */
-    usbdev_ep_buf_t data_out[ETHERNET_FRAME_LEN];
+    usbdev_ep_buf_t data_out[USBUS_ETHERNET_FRAME_BUF];
 
     /**
      * @brief Host in device out data buffer
@@ -126,6 +131,7 @@ typedef struct usbus_cdcecm_device {
      * @brief Host out device in control buffer
      */
     usbdev_ep_buf_t control_in[USBUS_CDCECM_EP_CTRL_SIZE];
+    usbus_urb_t out_urb;
 } usbus_cdcecm_device_t;
 
 /**
