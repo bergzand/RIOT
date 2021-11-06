@@ -49,6 +49,18 @@ extern "C" {
 #define CONFIG_MATRIX_KEYPAD_DEBOUNCE_MASK  0b11000111
 #endif
 
+#if CONFIG_MATRIX_KEYPAD_NUM_COLS <= 8
+typedef uint8_t matrix_keypad_state_row_t;
+#elif CONFIG_MATRIX_KEYPAD_NUM_COLS <= 16
+typedef uint16_t matrix_keypad_state_row_t;
+#elif CONFIG_MATRIX_KEYPAD_NUM_COLS <= 32
+typedef uint32_t matrix_keypad_state_row_t;
+#elif CONFIG_MATRIX_KEYPAD_NUM_COLS <= 64
+typedef uint64_t matrix_keypad_state_row_t;
+#else
+#error Too many columns on matrix keypad
+#endif
+
 /**
  * @brief   Device initialization parameters
  */
@@ -64,8 +76,16 @@ typedef struct {
 typedef struct {
     /** Device initialization parameters */
     matrix_keypad_params_t params;
+
+    /**
+     * @brief Debounce history
+     */
     uint8_t debounce[CONFIG_MATRIX_KEYPAD_NUM_ROWS][CONFIG_MATRIX_KEYPAD_NUM_COLS];
-    uint32_t state[CONFIG_MATRIX_KEYPAD_NUM_ROWS];
+
+    /**
+     * @brief Current button state
+     */
+    matrix_keypad_state_row_t state[CONFIG_MATRIX_KEYPAD_NUM_ROWS];
 } matrix_keypad_t;
 
 /**
