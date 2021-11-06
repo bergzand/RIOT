@@ -40,7 +40,7 @@ static void _clear_state(matrix_keypad_t *dev, size_t row, size_t column)
     dev->state[row] &= ~(1 << column);
 }
 
-void _setup_columns(matrix_keypad_t *dev)
+static void _setup_columns(matrix_keypad_t *dev)
 {
     for (size_t i = 0; i < CONFIG_MATRIX_KEYPAD_NUM_COLS; i++) {
         gpio_t column = dev->params.columns[i];
@@ -50,7 +50,7 @@ void _setup_columns(matrix_keypad_t *dev)
     }
 }
 
-void _setup_rows(matrix_keypad_t *dev)
+static void _setup_rows(matrix_keypad_t *dev)
 {
     for (size_t i = 0; i < CONFIG_MATRIX_KEYPAD_NUM_ROWS; i++) {
         gpio_t row = dev->params.rows[i];
@@ -80,6 +80,7 @@ unsigned _update_key(matrix_keypad_t *dev,
             *debounce = 0xff;
             _clear_state(dev, row, column);
             res = 1;
+            dev->callback(dev->arg, row, column, status);
         }
     }
     else {
@@ -88,15 +89,21 @@ unsigned _update_key(matrix_keypad_t *dev,
             /* Changed */
             _set_state(dev, row, column);
             res = 1;
+            dev->callback(dev->arg, row, column, status);
         }
     }
     return res;
 }
 
-int matrix_keypad_init(matrix_keypad_t *dev, const matrix_keypad_params_t *params)
+int matrix_keypad_init(matrix_keypad_t *dev, const matrix_keypad_params_t *params,
+                       matrix_keypad_cb_t callback, void *arg)
 {
     memset(dev, 0, sizeof(matrix_keypad_t));
     memcpy(&dev->params, params, sizeof(matrix_keypad_params_t));
+    dev->callback = callback;
+    dev->arg = arg;
+    _setup_columns(dev);
+    _setup_rows(dev);
     return 0;
 }
 
@@ -118,13 +125,13 @@ unsigned matrix_keypad_scan(matrix_keypad_t *dev)
         ztimer_sleep(ZTIMER_USEC, dev->params.row2col_delay);
 
         /* Scan columns */
-        for (size_t j = 0; j < CONFIG_MATRIX_KEYPAD_NUM_ROWS; j++) {
+        for (size_t j = 0; j < CONFIG_MATRIX_KEYPAD_NUM_COLS; j++) {
             gpio_t column = dev->params.columns[j];
             if (column == GPIO_UNDEF) {
                 continue;
             }
-            bool status = gpio_read(column);
-            res += _update_key(dev, row, column, status);
+            bool status = !gpio_read(column);
+            res += _update_key(dev, i, j, status);
         }
         /* Return the row to high-Z */
         gpio_set(row);

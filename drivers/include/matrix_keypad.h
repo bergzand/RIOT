@@ -71,6 +71,16 @@ typedef struct {
 } matrix_keypad_params_t;
 
 /**
+ * @brief   Callback for key state changes
+ *
+ * @param   arg     callback context
+ * @param   row     Row that changed
+ * @param   column  Column that changed
+ * @param   state   New state of the key, 1 = pressed, 0 = released
+ */
+typedef void (*matrix_keypad_cb_t)(void *arg, size_t row, size_t column, bool state);
+
+/**
  * @brief   Device descriptor for the driver
  */
 typedef struct {
@@ -86,6 +96,16 @@ typedef struct {
      * @brief Current button state
      */
     matrix_keypad_state_row_t state[CONFIG_MATRIX_KEYPAD_NUM_ROWS];
+
+    /**
+     * @brief callback context
+     */
+    void *arg;
+
+    /**
+     * @brief Callback
+     */
+    matrix_keypad_cb_t callback;
 } matrix_keypad_t;
 
 /**
@@ -93,10 +113,15 @@ typedef struct {
  *
  * @param[inout] dev        Device descriptor of the driver
  * @param[in]    params     Initialization parameters
+ * @param[in]    callback   Callback to call on state changes
+ * @param[in]    arg        Context argument for the callback
  *
  * @return                  0 on success
  */
-int matrix_keypad_init(matrix_keypad_t *dev, const matrix_keypad_params_t *params);
+int matrix_keypad_init(matrix_keypad_t *dev,
+                       const matrix_keypad_params_t *params,
+                       matrix_keypad_cb_t callback,
+                       void *arg);
 
 unsigned matrix_keypad_scan(matrix_keypad_t *dev);
 #ifdef __cplusplus
