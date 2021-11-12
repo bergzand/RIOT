@@ -65,7 +65,7 @@ typedef uint64_t matrix_keypad_state_row_t;
  * @brief   Device initialization parameters
  */
 typedef struct {
-    gpio_t rows[CONFIG_MATRIX_KEYPAD_NUM_COLS]; /** Rows */
+    gpio_t rows[CONFIG_MATRIX_KEYPAD_NUM_ROWS]; /** Rows */
     gpio_t columns[CONFIG_MATRIX_KEYPAD_NUM_COLS]; /** Columns */
     uint32_t row2col_delay;                     /** Row change to column scan delay in us */
 } matrix_keypad_params_t;
@@ -124,6 +124,16 @@ int matrix_keypad_init(matrix_keypad_t *dev,
                        void *arg);
 
 unsigned matrix_keypad_scan(matrix_keypad_t *dev);
+
+static inline bool matrix_keypad_get_key(matrix_keypad_t *dev,
+                                         size_t row, size_t column)
+{
+    assert(column < CONFIG_MATRIX_KEYPAD_NUM_COLS);
+    assert(row < CONFIG_MATRIX_KEYPAD_NUM_ROWS);
+
+    return dev->state[row] & (1 << column);
+}
+
 #ifdef __cplusplus
 }
 #endif
