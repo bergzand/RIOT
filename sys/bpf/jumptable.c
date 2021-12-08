@@ -151,7 +151,7 @@ int bpf_run(bpf_t *bpf, const void *ctx, int64_t *result)
         ALU_OPCODE(AND, 0x50),
         ALU_OPCODE(LSH, 0x60),
         ALU_OPCODE(RSH, 0x70),
-        ALU_OPCODE_REG(NEG, 0x80),
+        ALU_OPCODE_IMM(NEG, 0x80),
         ALU_OPCODE(MOD, 0x90),
         ALU_OPCODE(XOR, 0xa0),
         ALU_OPCODE(MOV, 0xb0),
@@ -274,12 +274,12 @@ ALU32_DIV_IMM:
     CONT;
 #endif
 
-ALU64_NEG_REG:
+ALU64_NEG_IMM:
     DST = -(int64_t)DST;
     CONT;
 
 #if (CONFIG_BPF_ENABLE_ALU32)
-ALU32_NEG_REG:
+ALU32_NEG_IMM:
     DST = -(int32_t)DST;
     CONT;
 
