@@ -3,7 +3,7 @@ include ../Makefile.tests_common
 BLOBS += bpf/fletcher32_bpf.bin
 
 USEMODULE += embunit
-USEMODULE += bpf
+USEPKG += femto-container
 
 USEMODULE += xtimer
 USEMODULE += saul

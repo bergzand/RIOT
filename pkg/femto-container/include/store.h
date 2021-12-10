@@ -58,13 +58,6 @@ static inline void bpf_store_set_value(bpf_store_keyval_t *keyval, uint32_t val)
     keyval->value = val;
 }
 
-void bpf_store_init(void);
-int bpf_store_update_global(uint32_t key, uint32_t value);
-int bpf_store_update_local(bpf_t *bpf, uint32_t key, uint32_t value);
-int bpf_store_fetch_global(uint32_t key, uint32_t *value);
-int bpf_store_fetch_local(bpf_t *bpf, uint32_t key, uint32_t *value);
-void bpf_store_iter_global(btree_cb_t cb, void *ctx);
-
 #ifdef __cplusplus
 }
 #endif

@@ -21,8 +21,8 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdint.h>
-#include "bpf.h"
-#include "bpf/shared.h"
+#include "femtocontainer/femtocontainer.h"
+#include "shared.h"
 #include "embUnit.h"
 #include "xtimer.h"
 
