@@ -1,8 +1,7 @@
 PKG_NAME    = femto-container
 PKG_URL     = https://github.com/future-proof-iot/Femto-Container
-PKG_VERSION = devel
+PKG_VERSION = d27568f233c49c3be3ea5f418373636f1ce0f496
 PKG_LICENSE = apache
-PKG_SOURCE_LOCAL = /home/koen/dev/femto-container 
 
 include $(RIOTBASE)/pkg/pkg.mk
 
