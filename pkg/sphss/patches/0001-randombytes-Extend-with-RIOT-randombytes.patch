@@ -1,0 +1,27 @@
+From 09c3ffb28f111481a5f9962d6f5c2f02671b17c8 Mon Sep 17 00:00:00 2001
+From: Koen Zandberg <koen@bergzand.net>
+Date: Tue, 19 Jul 2022 11:56:53 +0200
+Subject: [PATCH] randombytes: Extend with RIOT randombytes
+
+---
+ randombytes.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/randombytes.c b/randombytes.c
+index f3bbbc2..1813ccd 100644
+--- a/randombytes.c
++++ b/randombytes.c
+@@ -319,6 +319,10 @@ int randombytes(uint8_t *buf, size_t n) {
+     #elif defined(_WIN32)
+     /* Use windows API */
+     return randombytes_win32_randombytes(buf, n);
++    #elif defined(RIOT_VERSION)
++    /* Use RIOT API */
++    random_bytes(buf, n);
++    return 0;
+     #else
+ #error "randombytes(...) is not supported on this platform"
+     #endif
+-- 
+2.35.1
+
