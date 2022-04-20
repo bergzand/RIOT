@@ -28,6 +28,7 @@
 #include "assert.h"
 #include "cpu.h"
 #include "plic.h"
+#include "vendor/plic.h"
 
 /* Local macros to calculate register offsets */
 #ifndef _REG32
@@ -71,14 +72,14 @@ void plic_enable_interrupt(unsigned irq)
 {
     volatile uint32_t *irq_reg = _get_irq_reg(irq);
 
-    __atomic_fetch_or(irq_reg, 1 << (irq & 0x1f), __ATOMIC_RELAXED);
+    *irq_reg |= 1 << (irq & 0x1f);
 }
 
 void plic_disable_interrupt(unsigned irq)
 {
     volatile uint32_t *irq_reg = _get_irq_reg(irq);
 
-    __atomic_fetch_and(irq_reg, ~(1 << (irq & 0x1f)), __ATOMIC_RELAXED);
+    *irq_reg &= ~(1 << (irq & 0x1f));
 }
 
 void plic_set_threshold(unsigned threshold)
