@@ -34,6 +34,7 @@ static int _if_interface_fmt(coreconf_encoder_t *enc, const coreconf_node_t *nod
 {
     (void)node;
     (void)netif;
+
     nanocbor_fmt_map(coreconf_encoder_cbor(enc), 1);
     coreconf_fmt_sid(enc, 1533, 1542);
     return 0;
@@ -48,6 +49,7 @@ static int _if_interface(coreconf_encoder_t *enc, const coreconf_node_t *node)
 
         netif_t *last = NULL;
         while (last != netif_iter(NULL)) {
+
             netif_t *netif = NULL;
             netif_t *next = netif_iter(netif);
             /* Step until next is end of list or was previously listed. */
@@ -55,20 +57,42 @@ static int _if_interface(coreconf_encoder_t *enc, const coreconf_node_t *node)
                 netif = next;
                 next = netif_iter(netif);
             } while (next && next != last);
+
+            /* Insert name into the k_params */
+            char name[CONFIG_NETIF_NAMELENMAX];
+            int len = netif_get_name(netif, name);
+            if (len < CORECONF_COAP_K_LEN) {
+                strncpy(enc->k_param, name, len);
+            }
+            enc->num_k_args = 1;
+
             _if_interface_fmt(enc, node, netif);
+
+            *enc->k_param = '\0';
+            enc->num_k_args = 0;
+
             last = netif;
         }
     }
+    else {
+        netif_t *netif = netif_get_by_name(enc->k_param);
+        if (netif) {
+            nanocbor_fmt_array(coreconf_encoder_cbor(enc), 1);
+            _if_interface_fmt(enc, node, NULL);
+        }
+        else {
+            nanocbor_fmt_array(coreconf_encoder_cbor(enc), 0);
+        }
+    }
 
-    return 0;
+    return -1;
 }
 
 static int _if_interface_name(coreconf_encoder_t *enc, const coreconf_node_t *node)
 {
     (void)node;
-    netif_t *iface = netif_get_by_name();
     /* fixme: rework to key */
-    netif_t *netif = netif_iter(NULL);
+    netif_t *netif = netif_get_by_name(enc->k_param);
 
     char name[CONFIG_NETIF_NAMELENMAX];
     netif_get_name(netif, name);
