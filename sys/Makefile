@@ -32,6 +32,9 @@ endif
 ifneq (,$(filter cord_lc,$(USEMODULE)))
     DIRS += net/application_layer/cord/lc
 endif
+ifneq (,$(filter coreconf,$(USEMODULE)))
+  DIRS += net/coreconf
+endif
 ifneq (,$(filter cpp11-compat,$(USEMODULE)))
   DIRS += cpp11-compat
 endif

@@ -43,6 +43,7 @@ PSEUDOMODULES += cc2538_rf_obs_sig
 PSEUDOMODULES += conn_can_isotp_multi
 PSEUDOMODULES += cord_ep_standalone
 PSEUDOMODULES += core_%
+PSEUDOMODULES += coreconf_%
 PSEUDOMODULES += cortexm_fpu
 PSEUDOMODULES += cortexm_svc
 PSEUDOMODULES += cpp

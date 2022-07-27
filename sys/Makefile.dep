@@ -45,6 +45,25 @@ ifneq (,$(filter debug_irq_disable,$(USEMODULE)))
   USEMODULE += fmt
 endif
 
+ifneq (,$(filter congure_reno,$(USEMODULE)))
+  USEMODULE += congure_reno_methods
+endif
+
+ifneq (,$(filter congure_reno_methods,$(USEMODULE)))
+  USEMODULE += seq
+endif
+
+ifneq (,$(filter coreconf,$(USEMODULE)))
+  USEMODULE += gcoap
+  USEMODULE += base64url
+  USEPKG += nanocbor
+endif
+
+ifneq (,$(filter eepreg,$(USEMODULE)))
+  FEATURES_REQUIRED += periph_eeprom
+endif
+
+>>>>>>> b3e9ea4a6e (coreconf: Initial include of coreconf module)
 ifneq (,$(filter fmt_table,$(USEMODULE)))
   USEMODULE += fmt
 endif

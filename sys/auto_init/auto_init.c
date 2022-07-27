@@ -159,6 +159,11 @@ AUTO_INIT(uwb_core_init,
 extern void gcoap_init(void);
 AUTO_INIT(gcoap_init,
           AUTO_INIT_PRIO_MOD_GCOAP);
+#if IS_USED(MODULE_CORECONF)
+extern void coreconf_init(void);
+AUTO_INIT(coreconf_init,
+          AUTO_INIT_PRIO_MOD_GCOAP);
+#endif
 #endif
 #if IS_USED(MODULE_NANOCOAP_SERVER_AUTO_INIT)
 extern void auto_init_nanocoap_server(void);
