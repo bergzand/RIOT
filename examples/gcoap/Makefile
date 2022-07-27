@@ -44,6 +44,9 @@ else
 endif
 
 USEMODULE += gcoap
+USEMODULE += coreconf
+USEMODULE += coreconf_system
+USEMODULE += coreconf_interfaces
 
 # Required by gcoap example
 USEMODULE += od
