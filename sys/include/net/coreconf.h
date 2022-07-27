@@ -16,6 +16,8 @@
  * @brief   CORECONF definitions
  *
  * @author  Koen Zandberg <koen@bergzand.net>
+ *
+ * @experimental
  */
 #ifndef NET_CORECONF_H
 #define NET_CORECONF_H
@@ -35,6 +37,9 @@ extern "C" {
 #define CORECONF_STORE_SUBTREE "/c"
 #endif
 
+/**
+ * @brief Maximum allowed length of the k query parameter
+ */
 #ifndef CORECONF_COAP_K_LEN
 #define CORECONF_COAP_K_LEN 16
 #endif
@@ -61,7 +66,8 @@ typedef struct {
     coreconf_slicer_helper_t slicer;
     nanocbor_encoder_t encoder;
     char k_param[CORECONF_COAP_K_LEN];
-    size_t k_offset;
+    size_t num_k_args;
+
 } coreconf_encoder_t;
 
 typedef int (*coreconf_node_handler_t)(coreconf_encoder_t *encoder, const coreconf_node_t *node);

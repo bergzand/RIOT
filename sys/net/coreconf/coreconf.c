@@ -239,7 +239,6 @@ void coreconf_fmt_sid(coreconf_encoder_t *enc, uint64_t parent_sid, uint64_t sid
 static void _init_encoder(coreconf_encoder_t *encoder)
 {
     encoder->slicer.sliced_length = 0;
-    encoder->k_offset = 0;
     memset(encoder->k_param, 0, CORECONF_COAP_K_LEN);
 }
 
@@ -257,14 +256,28 @@ static int _copy_k_param(coap_pkt_t *pdu, coreconf_encoder_t *enc)
         query_start = coap_iterate_option(pdu, &opt_pos, &opt_len,
                                          (query_start == NULL));
         /* valid k option */
-        if (query_start && opt_len > 3 && query_start[0] == 'k' && query_start[1] == '=') {
+        if (query_start && opt_len > 2 && query_start[0] == 'k' && query_start[1] == '=') {
             if (opt_len > (CORECONF_COAP_K_LEN + 1)) {
                 return -ENOSPC;
             }
+            /* copy only the value */
             memcpy(enc->k_param, &query_start[2], opt_len - 2);
-            return 0;
+            break;
         }
     } while(opt_pos);
+
+    char *k_arg = enc->k_param;
+
+    enc->num_k_args = (*k_arg == '\0') ? 0 : 1;
+
+    while (*k_arg != '\0') {
+        if (*k_arg == ',') {
+            *k_arg = '\0';
+            enc->num_k_args++;
+        }
+        k_arg++;
+    }
+
     return 0;
 }
 
