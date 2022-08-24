@@ -167,7 +167,6 @@ static int _request_matcher(gcoap_listener_t *listener, const coap_resource_t
 static ssize_t _encode_links(const coap_resource_t *resource, char *buf,
                             size_t maxlen, coap_link_encoder_ctx_t *context)
 {
-    (void)context;
     (void)maxlen;
     uint8_t base64_buf[12] = { 0 };
 
@@ -185,11 +184,19 @@ static ssize_t _encode_links(const coap_resource_t *resource, char *buf,
     /* </c/NUM> */
     exp_len += 5 + b64len + strlen(_link_params);
 
+    if (!(context->flags & COAP_LINK_FLAG_INIT_RESLIST)) {
+        /* account for possibly leading comma */
+        exp_len += 1;
+    }
+
     if (exp_len > maxlen) {
         return -1;
     }
 
     if (buf) {
+        if (!(context->flags & COAP_LINK_FLAG_INIT_RESLIST)) {
+            buf[offset++] = ',';
+        }
         buf[offset++] = '<';
         buf[offset++] = '/';
         buf[offset++] = 'c';
