@@ -191,11 +191,11 @@ static int _if_interface_ip6_mtu(coreconf_encoder_t *enc, const coreconf_node_t 
 
 
 
-CORECONF_NODE(1533, COAP_GET, _if_interface);
-CORECONF_NODE(1542, COAP_GET, _if_interface_name);
-CORECONF_NODE(1544, COAP_GET, _if_interface_phys_addr);
-CORECONF_NODE(1561, COAP_GET, _if_interface_type);
+CORECONF_NODE(1533, COAP_GET, _if_interface, NULL);
+CORECONF_NODE(1542, COAP_GET, _if_interface_name, NULL);
+CORECONF_NODE(1544, COAP_GET, _if_interface_phys_addr, NULL);
+CORECONF_NODE(1561, COAP_GET, _if_interface_type, NULL);
 
-CORECONF_NODE(1642, COAP_GET, _if_interface_ip6);
-CORECONF_NODE(1654, COAP_GET, _if_interface_ip6_enabled);
-CORECONF_NODE(1656, COAP_GET, _if_interface_ip6_mtu);
+CORECONF_NODE(1642, COAP_GET, _if_interface_ip6, NULL);
+CORECONF_NODE(1654, COAP_GET, _if_interface_ip6_enabled, NULL);
+CORECONF_NODE(1656, COAP_GET, _if_interface_ip6_mtu, NULL);

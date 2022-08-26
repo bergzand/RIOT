@@ -67,15 +67,16 @@ typedef struct {
     nanocbor_encoder_t encoder;
     char k_param[CORECONF_COAP_K_LEN];
     size_t num_k_args;
-
 } coreconf_encoder_t;
 
-typedef int (*coreconf_node_handler_t)(coreconf_encoder_t *encoder, const coreconf_node_t *node);
+typedef int (*coreconf_node_read_handler_t)(coreconf_encoder_t *encoder, const coreconf_node_t *node);
+typedef int (*coreconf_node_write_handler_t)(coreconf_encoder_t *encoder, const coreconf_node_t *node, uint8_t *pdu, size_t len);
 
 struct coreconf_node {
     uint64_t num;
     uint8_t methods;
-    coreconf_node_handler_t handler;
+    coreconf_node_read_handler_t read;
+    coreconf_node_write_handler_t write;
 };
 
 static inline nanocbor_encoder_t *coreconf_encoder_cbor(coreconf_encoder_t *enc)
@@ -103,18 +104,13 @@ static inline bool coreconf_k_param_empty(const coreconf_encoder_t *enc)
  * #include "coreconf.h"
  *   // ...
  * }
- * CORECONF_RESOURCE(endpoint, COAP_GET | COAP_PUT, _handler, NULL);
+ * CORECONF_NODE(endpoint, COAP_GET | COAP_PUT, _handler, NULL);
  * ```
  */
-#define CORECONF_RESOURCE(endpoint, methods, handler, ctx) \
-    XFA_CONST(coreconf_resource_xfa, endpoint)                                          \
-    coap_resource_t coreconf_resource_ ## endpoint \
-        = { "/c/" XTSTR(endpoint) , methods, handler, ctx  }
-
-#define CORECONF_NODE(num, methods, handler) \
+#define CORECONF_NODE(num, methods, read, write) \
     XFA_CONST(coreconf_node_xfa, num)                                          \
     coreconf_node_t coreconf_node_ ## num\
-        = { num , methods, handler }
+        = { num , methods, read, write}
 
 
 void coreconf_fmt_sid(coreconf_encoder_t *enc, uint64_t parent_sid, uint64_t sid);

@@ -85,8 +85,8 @@ static int _system_platform_osversion_node(coreconf_encoder_t *enc, const coreco
     return 0;
 }
 
-CORECONF_NODE(1724, COAP_GET, _system_platform_node);
-CORECONF_NODE(1725, COAP_GET, _system_platform_machine_node);
-CORECONF_NODE(1726, COAP_GET, _system_platform_osname_node);
-CORECONF_NODE(1727, COAP_GET, _system_platform_osrelease_node);
-CORECONF_NODE(1728, COAP_GET, _system_platform_osversion_node);
+CORECONF_NODE(1724, COAP_GET, _system_platform_node, NULL);
+CORECONF_NODE(1725, COAP_GET, _system_platform_machine_node, NULL);
+CORECONF_NODE(1726, COAP_GET, _system_platform_osname_node, NULL);
+CORECONF_NODE(1727, COAP_GET, _system_platform_osrelease_node, NULL);
+CORECONF_NODE(1728, COAP_GET, _system_platform_osversion_node, NULL);

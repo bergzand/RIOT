@@ -24,7 +24,6 @@
 #include "base64.h"
 #include "byteorder.h"
 
-XFA_INIT_CONST(coap_resource_t, coreconf_resource_xfa);
 XFA_INIT_CONST(coreconf_node_t, coreconf_node_xfa);
 
 
@@ -33,7 +32,8 @@ static ssize_t _encode_links(const coap_resource_t *resource, char *buf,
 static int _request_matcher(gcoap_listener_t *listener, const coap_resource_t
         **resource, coap_pkt_t *pdu);
 
-static ssize_t _coreconf_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len, coap_request_ctx_t *context);
+static ssize_t _coreconf_read_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len, coap_request_ctx_t *context);
+static ssize_t _coreconf_write_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len, coap_request_ctx_t *context);
 
 static const char _link_params[] = ";ct=\"core.c.dn\"";
 
@@ -41,10 +41,17 @@ static const char _link_params[] = ";ct=\"core.c.dn\"";
 uint8_t *coap_iterate_option(coap_pkt_t *pkt, uint8_t **optpos,
                              int *opt_len, int first);
 
-static coap_resource_t _default = {
+static const coap_resource_t _read_resource = {
     NULL,
     0,
-    _coreconf_handler,
+    _coreconf_read_handler,
+    NULL
+};
+
+static const coap_resource_t _write_resource = {
+    NULL,
+    0,
+    _coreconf_write_handler,
     NULL
 };
 
@@ -139,12 +146,8 @@ static int _request_matcher(gcoap_listener_t *listener, const coap_resource_t
         **resource, coap_pkt_t *pdu)
 {
     (void)listener;
-    (void)resource;
-    (void)pdu;
 
-
-    //coap_method_flags_t method_flag = coap_method2flag(
-    //    coap_get_code_detail(pdu));
+    unsigned code = coap_get_code_detail(pdu);
 
     uint64_t sid = _pdu2sid(pdu);
     if (sid == 0) {
@@ -156,8 +159,17 @@ static int _request_matcher(gcoap_listener_t *listener, const coap_resource_t
     const coreconf_node_t *node = _find_coreconf_node(sid);
 
     if (node) {
-        *resource = &_default;
-        ret = GCOAP_RESOURCE_FOUND;
+        if (code == COAP_METHOD_GET && node->read) {
+            *resource = &_read_resource;
+            ret = GCOAP_RESOURCE_FOUND;
+        }
+        else if ((code == COAP_METHOD_PUT || code == COAP_METHOD_POST) && node->write) {
+            *resource = &_write_resource;
+            ret = GCOAP_RESOURCE_FOUND;
+        }
+        else {
+            ret = GCOAP_RESOURCE_WRONG_METHOD;
+        }
     }
 
     /* check if the url is valid and return generic */
@@ -239,7 +251,7 @@ void coreconf_fmt_sid(coreconf_encoder_t *enc, uint64_t parent_sid, uint64_t sid
     const coreconf_node_t *node = _find_coreconf_node(sid);
     assert(node);
 
-    node->handler(enc, node);
+    node->read(enc, node);
 
 }
 
@@ -288,7 +300,7 @@ static int _copy_k_param(coap_pkt_t *pdu, coreconf_encoder_t *enc)
     return 0;
 }
 
-static ssize_t _coreconf_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len, coap_request_ctx_t *context)
+static ssize_t _coreconf_read_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len, coap_request_ctx_t *context)
 {
     (void)context;
     coreconf_encoder_t encoder;
@@ -317,6 +329,16 @@ static ssize_t _coreconf_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len, coap
 
     coap_block2_finish(&encoder.slicer.slicer);
     return resp_len + encoder.slicer.sliced_length;
+}
+
+static ssize_t _coreconf_write_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len, coap_request_ctx_t *context)
+{
+    (void)context;
+    (void)pdu;
+    (void)buf;
+    (void)len;
+
+    return COAP_CODE_NOT_IMPLEMENTED;
 }
 
 void coreconf_init(void)
