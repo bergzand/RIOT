@@ -241,7 +241,7 @@ static void _nanocbor_append(nanocbor_encoder_t *enc, void *ctx, const uint8_t *
                                  buf, len);
 }
 
-void coreconf_fmt_sid(coreconf_encoder_t *enc, uint64_t parent_sid, uint64_t sid)
+int coreconf_fmt_sid(coreconf_encoder_t *enc, uint64_t parent_sid, uint64_t sid)
 {
     /* BUG: uint64 to int64 conversion */
     int64_t fmt_sid = sid - parent_sid;
@@ -251,8 +251,11 @@ void coreconf_fmt_sid(coreconf_encoder_t *enc, uint64_t parent_sid, uint64_t sid
     const coreconf_node_t *node = _find_coreconf_node(sid);
     assert(node);
 
-    node->read(enc, node);
-
+    ssize_t res = node->read(enc, node);
+    if (res < 0) {
+        return res;
+    }
+    return 0;
 }
 
 static void _init_encoder(coreconf_encoder_t *encoder)
@@ -325,9 +328,15 @@ static ssize_t _coreconf_read_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len,
                                  _nanocbor_append, _nanocbor_fits);
 
     nanocbor_fmt_map(coreconf_encoder_cbor(&encoder), 1);
-    coreconf_fmt_sid(&encoder, 0, sid);
+
+    res = coreconf_fmt_sid(&encoder, 0, sid);
+
+    if (res < 0) {
+        return gcoap_response(pdu, buf, len, COAP_CODE_INTERNAL_SERVER_ERROR);
+    }
 
     coap_block2_finish(&encoder.slicer.slicer);
+
     return resp_len + encoder.slicer.sliced_length;
 }
 

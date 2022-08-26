@@ -106,7 +106,7 @@ static int _if_interface(coreconf_encoder_t *enc, const coreconf_node_t *node)
         }
     }
 
-    return -1;
+    return 0;
 }
 
 static int _if_interface_name(coreconf_encoder_t *enc, const coreconf_node_t *node)
@@ -119,9 +119,11 @@ static int _if_interface_name(coreconf_encoder_t *enc, const coreconf_node_t *no
         netif_get_name(netif, name);
 
         nanocbor_put_tstr(coreconf_encoder_cbor(enc), name);
+
+        return 0;
     }
 
-    return 0;
+    return -1;
 }
 
 static int _if_interface_phys_addr(coreconf_encoder_t *enc, const coreconf_node_t *node)
@@ -137,9 +139,10 @@ static int _if_interface_phys_addr(coreconf_encoder_t *enc, const coreconf_node_
             gnrc_netif_addr_to_str(hwaddr, res, hwaddr_str);
             nanocbor_put_tstr(coreconf_encoder_cbor(enc), hwaddr_str);
         }
+        return 0;
     }
 
-    return 0;
+    return -1;
 }
 
 static int _if_interface_type(coreconf_encoder_t *enc, const coreconf_node_t *node)
@@ -153,9 +156,10 @@ static int _if_interface_type(coreconf_encoder_t *enc, const coreconf_node_t *no
         if (res >= 0) {
             nanocbor_fmt_uint(coreconf_encoder_cbor(enc), _iftype2sid(type));
         }
+        return 0;
     }
 
-    return 0;
+    return -1;
 }
 
 static int _if_interface_ip6(coreconf_encoder_t *enc, const coreconf_node_t *node)
@@ -185,8 +189,9 @@ static int _if_interface_ip6_mtu(coreconf_encoder_t *enc, const coreconf_node_t 
         int res = netif_get_opt(netif, NETOPT_MAX_PDU_SIZE, GNRC_NETTYPE_IPV6, &mtu, sizeof(mtu));
         (void)res;
         nanocbor_fmt_uint(coreconf_encoder_cbor(enc), mtu);
+        return 0;
     }
-    return 0;
+    return -1;
 }
 
 

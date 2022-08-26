@@ -113,7 +113,7 @@ static inline bool coreconf_k_param_empty(const coreconf_encoder_t *enc)
         = { num , methods, read, write}
 
 
-void coreconf_fmt_sid(coreconf_encoder_t *enc, uint64_t parent_sid, uint64_t sid);
+int coreconf_fmt_sid(coreconf_encoder_t *enc, uint64_t parent_sid, uint64_t sid);
 #ifdef __cplusplus
 }
 #endif
