@@ -19,6 +19,11 @@ which are based on the [SLIP instructions][3] for the gnrc_border_router
 example. We also plan to provide or reference the ethos/UHCP instructions,
 but we don't have it working yet.
 
+## CORECONF module
+
+The CORECONF module is in the RIOT tree of this branch as a system module.
+It can be found in
+[sys/net/coreconf](https://github.com/bergzand/RIOT/tree/project/aiot/sys/net/coreconf)
 
 ## Example Use
 
