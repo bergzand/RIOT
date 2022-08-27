@@ -26,6 +26,7 @@ else
   USEMODULE += lwip_ipv6
   USEMODULE += lwip_netdev
 endif
+USEMODULE += netstats_l2
 
 USEMODULE += gcoap
 USEMODULE += coreconf
