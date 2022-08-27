@@ -21,6 +21,9 @@
 #include "net/gcoap.h"
 #include "xfa.h"
 #include "net/netif.h"
+#include "net/netstats.h"
+
+static int _fmt_if_interface(coreconf_encoder_t *enc, const coreconf_node_t *node, netif_t *netif);
 
 static uint64_t _iftype2sid(uint16_t type)
 {
@@ -36,6 +39,16 @@ static uint64_t _iftype2sid(uint16_t type)
     }
 }
 
+static bool _netopt_state2enabled(netopt_state_t state)
+{
+    if ((state == NETOPT_STATE_TX) ||
+        (state == NETOPT_STATE_RX) ||
+        (state == NETOPT_STATE_IDLE)) {
+        return true;
+    }
+    return false;
+}
+
 static size_t _num_interfaces(void)
 {
     size_t num = 0;
@@ -44,21 +57,6 @@ static size_t _num_interfaces(void)
         num++;
     }
     return num;
-}
-
-static int _if_interface_fmt(coreconf_encoder_t *enc, const coreconf_node_t *node, netif_t *netif)
-{
-    (void)node;
-    (void)netif;
-
-    const uint64_t mysid = 1533;
-
-    nanocbor_fmt_map(coreconf_encoder_cbor(enc), 4);
-    coreconf_fmt_sid(enc, mysid, 1542);
-    coreconf_fmt_sid(enc, mysid, 1544);
-    coreconf_fmt_sid(enc, mysid, 1561);
-    coreconf_fmt_sid(enc, mysid, 1642);
-    return 0;
 }
 
 static int _if_interface(coreconf_encoder_t *enc, const coreconf_node_t *node)
@@ -87,7 +85,7 @@ static int _if_interface(coreconf_encoder_t *enc, const coreconf_node_t *node)
             }
             enc->num_k_args = 1;
 
-            _if_interface_fmt(enc, node, netif);
+            _fmt_if_interface(enc, node, netif);
 
             *enc->k_param = '\0';
             enc->num_k_args = 0;
@@ -99,7 +97,7 @@ static int _if_interface(coreconf_encoder_t *enc, const coreconf_node_t *node)
         netif_t *netif = netif_get_by_name(enc->k_param);
         if (netif) {
             nanocbor_fmt_array(coreconf_encoder_cbor(enc), 1);
-            _if_interface_fmt(enc, node, NULL);
+            _fmt_if_interface(enc, node, NULL);
         }
         else {
             nanocbor_fmt_array(coreconf_encoder_cbor(enc), 0);
@@ -109,62 +107,175 @@ static int _if_interface(coreconf_encoder_t *enc, const coreconf_node_t *node)
     return 0;
 }
 
-static int _if_interface_name(coreconf_encoder_t *enc, const coreconf_node_t *node)
+static int _fmt_if_interface_name(coreconf_encoder_t *enc, const coreconf_node_t *node, netif_t *netif)
 {
     (void)node;
-    /* fixme: rework to key */
-    netif_t *netif = netif_get_by_name(enc->k_param);
-    if (netif) {
-        char name[CONFIG_NETIF_NAMELENMAX];
-        netif_get_name(netif, name);
+    char name[CONFIG_NETIF_NAMELENMAX];
+    netif_get_name(netif, name);
 
-        nanocbor_put_tstr(coreconf_encoder_cbor(enc), name);
+    nanocbor_put_tstr(coreconf_encoder_cbor(enc), name);
+    return 0;
+}
 
+static int _fmt_if_interface_enabled_read(coreconf_encoder_t *enc, const coreconf_node_t *node, netif_t *netif)
+{
+    (void)node;
+    netopt_state_t state = NETOPT_STATE_OFF;
+    int res = netif_get_opt(netif, NETOPT_STATE, 0, &state, sizeof(state));
+    if (res >= 0) {
+        nanocbor_fmt_bool(coreconf_encoder_cbor(enc),
+                _netopt_state2enabled(state));
         return 0;
     }
-
+    if (res == -ENOTSUP) {
+        /* interface is always enabled */
+        nanocbor_fmt_bool(coreconf_encoder_cbor(enc),
+                true);
+        return 0;
+    }
     return -1;
 }
 
-static int _if_interface_phys_addr(coreconf_encoder_t *enc, const coreconf_node_t *node)
+static int _fmt_if_interface_phys_addr(coreconf_encoder_t *enc, const coreconf_node_t *node, netif_t *netif)
 {
     (void)node;
-    /* fixme: rework to key */
     uint8_t hwaddr[GNRC_NETIF_L2ADDR_MAXLEN];
-    netif_t *netif = netif_get_by_name(enc->k_param);
-    if (netif) {
-        int res = netif_get_opt(netif, NETOPT_ADDRESS, 0, hwaddr, sizeof(hwaddr));
-        if (res >= 0) {
-            char hwaddr_str[res * 3];
-            gnrc_netif_addr_to_str(hwaddr, res, hwaddr_str);
-            nanocbor_put_tstr(coreconf_encoder_cbor(enc), hwaddr_str);
-        }
-        return 0;
+    int res = netif_get_opt(netif, NETOPT_ADDRESS, 0, hwaddr, sizeof(hwaddr));
+    if (res >= 0) {
+        char hwaddr_str[res * 3];
+        gnrc_netif_addr_to_str(hwaddr, res, hwaddr_str);
+        nanocbor_put_tstr(coreconf_encoder_cbor(enc), hwaddr_str);
     }
-
-    return -1;
+    return 0;
 }
 
-static int _if_interface_type(coreconf_encoder_t *enc, const coreconf_node_t *node)
+static int _fmt_if_interface_type(coreconf_encoder_t *enc, const coreconf_node_t *node, netif_t *netif)
 {
     (void)node;
+    uint16_t type;
+    int res = netif_get_opt(netif, NETOPT_DEVICE_TYPE, 0, &type, sizeof(type));
+    if (res >= 0) {
+        nanocbor_fmt_uint(coreconf_encoder_cbor(enc), _iftype2sid(type));
+    }
+    return 0;
+}
+
+static void _fmt_if_interface_stats_in_octets(coreconf_encoder_t *enc,
+        const netstats_t *stats)
+{
+    /* Check: spec says to include framing chars */
+    nanocbor_fmt_uint(coreconf_encoder_cbor(enc), stats->rx_bytes);
+}
+
+static void _fmt_if_interface_stats_out_octets(coreconf_encoder_t *enc,
+        const netstats_t *stats)
+{
+    /* Check: spec says to include framing chars */
+    nanocbor_fmt_uint(coreconf_encoder_cbor(enc), stats->tx_bytes);
+}
+
+static void _fmt_if_interface_stats_out_mcast_pkts(coreconf_encoder_t *enc,
+        const netstats_t *stats)
+{
+    nanocbor_fmt_uint(coreconf_encoder_cbor(enc), stats->tx_mcast_count);
+}
+
+static void _fmt_if_interface_stats_out_unicast_pkts(coreconf_encoder_t *enc,
+        const netstats_t *stats)
+{
+    nanocbor_fmt_uint(coreconf_encoder_cbor(enc), stats->tx_unicast_count);
+}
+
+static void _fmt_if_interface_stats_out_error_pkts(coreconf_encoder_t *enc,
+        const netstats_t *stats)
+{
+    nanocbor_fmt_uint(coreconf_encoder_cbor(enc), stats->tx_failed);
+}
+
+static int _fmt_if_interface_stats(coreconf_encoder_t *enc, const coreconf_node_t *node, netif_t *netif)
+{
+    (void)node;
+    netstats_t stats;
+    int res = netif_get_opt(netif, NETOPT_STATS, NETSTATS_LAYER2, &stats,
+                            sizeof(stats));
+    if (res < 0) {
+        return -1;
+    }
+
+    const int64_t mysid = 1517;
+
+    nanocbor_encoder_t *nc = coreconf_encoder_cbor(enc);
+    nanocbor_fmt_map(nc, 5);
+
+    coreconf_cbor_sid(enc, mysid, 1552);
+    _fmt_if_interface_stats_in_octets(enc, &stats);
+
+    coreconf_cbor_sid(enc, mysid, 1557);
+    _fmt_if_interface_stats_out_error_pkts(enc, &stats);
+
+    coreconf_cbor_sid(enc, mysid, 1558);
+    _fmt_if_interface_stats_out_mcast_pkts(enc, &stats);
+
+    coreconf_cbor_sid(enc, mysid, 1559);
+    _fmt_if_interface_stats_out_octets(enc, &stats);
+
+    coreconf_cbor_sid(enc, mysid, 1560);
+    _fmt_if_interface_stats_out_unicast_pkts(enc, &stats);
+
+    return 0;
+}
+
+static int _fmt_if_interface(coreconf_encoder_t *enc, const coreconf_node_t *node, netif_t *netif)
+{
+    (void)node;
+    (void)netif;
+
+    const uint64_t mysid = 1533;
+
+    nanocbor_fmt_map(coreconf_encoder_cbor(enc), 6);
+
+    coreconf_cbor_sid(enc, mysid, 1542);
+    _fmt_if_interface_name(enc, node, netif);
+
+    coreconf_cbor_sid(enc, mysid, 1543);
+    _fmt_if_interface_enabled_read(enc, node, netif);
+
+    coreconf_cbor_sid(enc, mysid, 1544);
+    _fmt_if_interface_phys_addr(enc, node, netif);
+
+    coreconf_cbor_sid(enc, mysid, 1546);
+    _fmt_if_interface_stats(enc, node, netif);
+
+    coreconf_cbor_sid(enc, mysid, 1561);
+    _fmt_if_interface_type(enc, node, netif);
+
+    coreconf_fmt_sid(enc, mysid, 1642);
+    return 0;
+}
+
+static int _fmt_if_interface_ip6_mtu(coreconf_encoder_t *enc, const coreconf_node_t *node, netif_t *netif)
+{
+    (void)node;
+    uint16_t mtu;
+    int res = netif_get_opt(netif, NETOPT_MAX_PDU_SIZE, GNRC_NETTYPE_IPV6, &mtu, sizeof(mtu));
+    (void)res;
+    nanocbor_fmt_uint(coreconf_encoder_cbor(enc), mtu);
+    return 0;
+}
+
+static int _fmt_if_interface_ip6_enabled(coreconf_encoder_t *enc, const coreconf_node_t *node, netif_t *netif)
+{
+    (void)node;
+    (void)netif;
     /* fixme: rework to key */
-    netif_t *netif = netif_get_by_name(enc->k_param);
-    if (netif) {
-        uint16_t type;
-        int res = netif_get_opt(netif, NETOPT_DEVICE_TYPE, 0, &type, sizeof(type));
-        if (res >= 0) {
-            nanocbor_fmt_uint(coreconf_encoder_cbor(enc), _iftype2sid(type));
-        }
-        return 0;
-    }
-
-    return -1;
+    nanocbor_fmt_bool(coreconf_encoder_cbor(enc), true);
+    return 0;
 }
 
-static int _if_interface_ip6(coreconf_encoder_t *enc, const coreconf_node_t *node)
+static int _fmt_if_interface_ip6(coreconf_encoder_t *enc, const coreconf_node_t *node, netif_t *netif)
 {
     (void)node;
+    (void)netif;
     nanocbor_fmt_map(coreconf_encoder_cbor(enc), 2);
     coreconf_fmt_sid(enc, 1642, 1654);
     coreconf_fmt_sid(enc, 1642, 1656);
@@ -173,34 +284,51 @@ static int _if_interface_ip6(coreconf_encoder_t *enc, const coreconf_node_t *nod
 
 static int _if_interface_ip6_enabled(coreconf_encoder_t *enc, const coreconf_node_t *node)
 {
-    (void)node;
-    /* fixme: rework to key */
-    nanocbor_fmt_bool(coreconf_encoder_cbor(enc), true);
-
+    _fmt_if_interface_ip6_enabled(enc, node, NULL);
     return 0;
 }
 
 static int _if_interface_ip6_mtu(coreconf_encoder_t *enc, const coreconf_node_t *node)
 {
-    (void)node;
     netif_t *netif = netif_get_by_name(enc->k_param);
     if (netif) {
-        uint16_t mtu;
-        int res = netif_get_opt(netif, NETOPT_MAX_PDU_SIZE, GNRC_NETTYPE_IPV6, &mtu, sizeof(mtu));
-        (void)res;
-        nanocbor_fmt_uint(coreconf_encoder_cbor(enc), mtu);
-        return 0;
+        _fmt_if_interface_ip6_mtu(enc, node, netif);
     }
     return -1;
 }
 
-
+/* single property from a network interface */
+static int _if_interface_prop_read(coreconf_encoder_t *enc, const coreconf_node_t *node)
+{
+    netif_t *netif = netif_get_by_name(enc->k_param);
+    nanocbor_fmt_map(coreconf_encoder_cbor(enc), 1);
+    coreconf_cbor_sid(enc, 0, node->num);
+    if (netif) {
+        switch (node->num) {
+            case 1542:
+                return _fmt_if_interface_name(enc, node, netif);
+            case 1543:
+                return _fmt_if_interface_enabled_read(enc, node, netif);
+            case 1544:
+                return _fmt_if_interface_phys_addr(enc, node, netif);
+            case 1546:
+                return _fmt_if_interface_stats(enc, node, netif);
+            case 1561:
+                return _fmt_if_interface_type(enc, node, netif);
+            case 1642:
+                return _fmt_if_interface_ip6(enc, node, netif);
+        }
+    }
+    return -1;
+}
 
 CORECONF_NODE(1533, COAP_GET, _if_interface, NULL);
-CORECONF_NODE(1542, COAP_GET, _if_interface_name, NULL);
-CORECONF_NODE(1544, COAP_GET, _if_interface_phys_addr, NULL);
-CORECONF_NODE(1561, COAP_GET, _if_interface_type, NULL);
+CORECONF_NODE(1542, COAP_GET, _if_interface_prop_read, NULL);
+CORECONF_NODE(1543, COAP_GET, _if_interface_prop_read, NULL);
+CORECONF_NODE(1544, COAP_GET, _if_interface_prop_read, NULL);
+CORECONF_NODE(1546, COAP_GET, _if_interface_prop_read, NULL);
+CORECONF_NODE(1561, COAP_GET, _if_interface_prop_read, NULL);
 
-CORECONF_NODE(1642, COAP_GET, _if_interface_ip6, NULL);
+CORECONF_NODE(1642, COAP_GET, _if_interface_prop_read, NULL);
 CORECONF_NODE(1654, COAP_GET, _if_interface_ip6_enabled, NULL);
 CORECONF_NODE(1656, COAP_GET, _if_interface_ip6_mtu, NULL);

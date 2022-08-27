@@ -88,6 +88,16 @@ static inline bool coreconf_k_param_empty(const coreconf_encoder_t *enc)
     return enc->k_param[0] == '\0';
 }
 
+static inline int64_t coreconf_sid_diff(int64_t mysid, int64_t sid)
+{
+    return sid - mysid;
+}
+
+static inline void coreconf_cbor_sid(coreconf_encoder_t *enc, int64_t mysid, int64_t sid)
+{
+    nanocbor_fmt_int(coreconf_encoder_cbor(enc), coreconf_sid_diff(mysid, sid));
+}
+
 /**
  * @brief   Define a CORECONF endpoint
  *
