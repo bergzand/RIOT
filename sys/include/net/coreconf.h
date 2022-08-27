@@ -45,12 +45,11 @@ extern "C" {
 #endif
 
 /**
- * @brief CoAP format code used in the response. Spec says
- * application/yang-data+cbor; id=sid, but decoding with aiocoap is automatic
- * when using application/cbor
+ * @brief CoAP format code used in the response.
+ * application/yang-data+cbor;id=sid
  */
 #ifndef CORECONF_COAP_FORMAT
-#define CORECONF_COAP_FORMAT   COAP_FORMAT_CBOR
+#define CORECONF_COAP_FORMAT   140
 #endif
 
 typedef struct coreconf_node coreconf_node_t;
