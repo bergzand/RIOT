@@ -68,8 +68,15 @@ typedef struct {
     size_t num_k_args;
 } coreconf_encoder_t;
 
+typedef struct {
+    coap_pkt_t *pdu;
+    nanocbor_value_t decoder;
+    char k_param[CORECONF_COAP_K_LEN];
+    size_t num_k_args;
+} coreconf_decoder_t;
+
 typedef int (*coreconf_node_read_handler_t)(coreconf_encoder_t *encoder, const coreconf_node_t *node);
-typedef int (*coreconf_node_write_handler_t)(coreconf_encoder_t *encoder, const coreconf_node_t *node, uint8_t *pdu, size_t len);
+typedef int (*coreconf_node_write_handler_t)(coreconf_decoder_t *decoder, const coreconf_node_t *node);
 
 struct coreconf_node {
     uint64_t num;
