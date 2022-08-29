@@ -264,11 +264,18 @@ static void _init_encoder(coreconf_encoder_t *encoder)
     memset(encoder->k_param, 0, CORECONF_COAP_K_LEN);
 }
 
-static int _copy_k_param(coap_pkt_t *pdu, coreconf_encoder_t *enc)
+static void _init_decoder(coreconf_decoder_t *decoder)
 {
+    memset(decoder->k_param, 0, CORECONF_COAP_K_LEN);
+}
+
+static int _copy_k_param(coap_pkt_t *pdu, char *k_param)
+{
+    int num_k_args = 0;
+
     uint8_t *opt_pos = coap_find_option(pdu, COAP_OPT_URI_QUERY);
     if (!opt_pos) {
-        enc->k_param[0] = '\0';
+        k_param[0] = '\0';
         return 0;
     }
 
@@ -283,24 +290,24 @@ static int _copy_k_param(coap_pkt_t *pdu, coreconf_encoder_t *enc)
                 return -ENOSPC;
             }
             /* copy only the value */
-            memcpy(enc->k_param, &query_start[2], opt_len - 2);
+            memcpy(k_param, &query_start[2], opt_len - 2);
             break;
         }
     } while(opt_pos);
 
-    char *k_arg = enc->k_param;
+    char *k_arg = k_param;
 
-    enc->num_k_args = (*k_arg == '\0') ? 0 : 1;
+    num_k_args = (*k_arg == '\0') ? 0 : 1;
 
     while (*k_arg != '\0') {
         if (*k_arg == ',') {
             *k_arg = '\0';
-            enc->num_k_args++;
+            num_k_args++;
         }
         k_arg++;
     }
 
-    return 0;
+    return num_k_args;
 }
 
 static ssize_t _coreconf_read_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len, coap_request_ctx_t *context)
@@ -310,10 +317,11 @@ static ssize_t _coreconf_read_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len,
 
     _init_encoder(&encoder);
     uint64_t sid = _pdu2sid(pdu);
-    int res = _copy_k_param(pdu, &encoder);
+    int res = _copy_k_param(pdu, encoder.k_param);
     if (res < 0) {
         return res;
     }
+    encoder.num_k_args = res;
 
     coap_block2_init(pdu, &encoder.slicer.slicer);
     gcoap_resp_init(pdu, buf, len, COAP_CODE_CONTENT);
@@ -343,11 +351,55 @@ static ssize_t _coreconf_read_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len,
 static ssize_t _coreconf_write_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len, coap_request_ctx_t *context)
 {
     (void)context;
-    (void)pdu;
-    (void)buf;
-    (void)len;
+    coreconf_decoder_t decoder;
+    _init_decoder(&decoder);
 
-    return COAP_CODE_NOT_IMPLEMENTED;
+    int res = _copy_k_param(pdu, decoder.k_param);
+    if (res < 0) {
+        return res;
+    }
+    decoder.num_k_args = res;
+
+    uint64_t sid = _pdu2sid(pdu);
+
+    nanocbor_value_t outer_map;
+    nanocbor_decoder_init(&outer_map, pdu->payload, pdu->payload_len);
+    /* todo: walk through the whole cbor struct to validate it */
+
+    nanocbor_value_t inner_map;
+    if (nanocbor_enter_map(&outer_map, &inner_map) != NANOCBOR_OK) {
+        goto cbor_fmt_err;
+    }
+
+    uint64_t inner_sid;
+    if ((nanocbor_get_uint64(&inner_map, &inner_sid) < NANOCBOR_OK) ||
+        (inner_sid != sid)) {
+        goto cbor_fmt_err;
+    }
+
+    decoder.decoder = inner_map; /* now points to the actual content */
+
+    nanocbor_skip(&inner_map);
+    if (!nanocbor_at_end(&inner_map)) {
+        goto cbor_fmt_err;
+    }
+
+    nanocbor_leave_container(&outer_map, &inner_map);
+
+    if (!nanocbor_at_end(&outer_map)) {
+        goto cbor_fmt_err;
+    }
+
+    /* Validated the outer cbor somewhat, delegate to handler */
+    const coreconf_node_t *node = _find_coreconf_node(sid);
+    int wres = node->write(&decoder, node);
+    if (wres < 0) {
+        return gcoap_response(pdu, buf, len, COAP_CODE_INTERNAL_SERVER_ERROR);
+    }
+    return gcoap_response(pdu, buf, len, wres);
+
+cbor_fmt_err:
+    return gcoap_response(pdu, buf, len, COAP_CODE_BAD_REQUEST);
 }
 
 void coreconf_init(void)
