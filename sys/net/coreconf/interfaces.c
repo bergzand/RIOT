@@ -20,10 +20,29 @@
 #include "net/netdev.h"
 #include "net/gcoap.h"
 #include "xfa.h"
+#include "net/ipv6/addr.h"
 #include "net/netif.h"
 #include "net/netstats.h"
+#include "net/gnrc/ipv6/nib.h"
 
 static int _fmt_if_interface(coreconf_encoder_t *enc, const coreconf_node_t *node, netif_t *netif);
+
+static uint8_t _ipv6_addr_get_pfx_len(const netif_t *netif, const ipv6_addr_t *addr)
+{
+    gnrc_ipv6_nib_pl_t entry;
+    void *state = NULL;
+
+    if (ipv6_addr_is_link_local(addr)) {
+        return 64;
+    }
+
+    while (gnrc_ipv6_nib_pl_iter(netif_get_id(netif), &state, &entry)) {
+        if (ipv6_addr_match_prefix(addr, &entry.pfx) >= entry.pfx_len) {
+            return entry.pfx_len;
+        }
+    }
+    return 0;
+}
 
 static uint64_t _iftype2sid(uint16_t type)
 {
@@ -105,6 +124,45 @@ static int _if_interface(coreconf_encoder_t *enc, const coreconf_node_t *node)
     }
 
     return 0;
+}
+
+static void _fmt_interface_ip6_addr_ip(coreconf_encoder_t *enc, const coreconf_node_t *node, ipv6_addr_t *addr)
+{
+    (void)node;
+    char addr_str[IPV6_ADDR_MAX_STR_LEN];
+
+    ipv6_addr_to_str(addr_str, addr, sizeof(addr_str));
+    nanocbor_put_tstr(coreconf_encoder_cbor(enc), addr_str);
+}
+
+static void _fmt_interface_ip6_addr_pfx(coreconf_encoder_t *enc, const coreconf_node_t *node, const netif_t *netif, const ipv6_addr_t *addr)
+{
+    (void)node;
+    uint8_t prefix_len = _ipv6_addr_get_pfx_len(netif, addr);
+    nanocbor_fmt_uint(coreconf_encoder_cbor(enc), prefix_len);
+}
+
+static int _fmt_if_interface_ip6_addr(coreconf_encoder_t *enc, const coreconf_node_t *node, netif_t *netif)
+{
+    const uint64_t mysid = 1642;
+    ipv6_addr_t ipv6_addrs[CONFIG_GNRC_NETIF_IPV6_ADDRS_NUMOF];
+    int res = netif_get_opt(netif, NETOPT_IPV6_ADDR, 0, ipv6_addrs,
+                          sizeof(ipv6_addrs));
+    if (res >= 0) {
+        size_t num_addresses = res / sizeof(ipv6_addr_t);
+
+        nanocbor_fmt_array(coreconf_encoder_cbor(enc), num_addresses);
+
+        for (unsigned i = 0; i < num_addresses; i++) {
+            nanocbor_fmt_map(coreconf_encoder_cbor(enc), 2);
+            coreconf_cbor_sid(enc, mysid, 1644);
+            _fmt_interface_ip6_addr_ip(enc, node, &ipv6_addrs[i]);
+            coreconf_cbor_sid(enc, mysid, 1646);
+            _fmt_interface_ip6_addr_pfx(enc, node, netif, &ipv6_addrs[i]);
+        }
+        return 0;
+    }
+    return -1;
 }
 
 static int _fmt_if_interface_name(coreconf_encoder_t *enc, const coreconf_node_t *node, netif_t *netif)
@@ -276,9 +334,14 @@ static int _fmt_if_interface_ip6(coreconf_encoder_t *enc, const coreconf_node_t 
 {
     (void)node;
     (void)netif;
-    nanocbor_fmt_map(coreconf_encoder_cbor(enc), 2);
+    nanocbor_fmt_map(coreconf_encoder_cbor(enc), 3);
+
+    coreconf_cbor_sid(enc, 1642, 1643);
+    _fmt_if_interface_ip6_addr(enc, node, netif);
+
     coreconf_fmt_sid(enc, 1642, 1654);
     coreconf_fmt_sid(enc, 1642, 1656);
+
     return 0;
 }
 
