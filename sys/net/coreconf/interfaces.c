@@ -116,7 +116,7 @@ static int _if_interface(coreconf_encoder_t *enc, const coreconf_node_t *node)
         netif_t *netif = netif_get_by_name(enc->k_param);
         if (netif) {
             nanocbor_fmt_array(coreconf_encoder_cbor(enc), 1);
-            _fmt_if_interface(enc, node, NULL);
+            _fmt_if_interface(enc, node, netif);
         }
         else {
             nanocbor_fmt_array(coreconf_encoder_cbor(enc), 0);
@@ -379,9 +379,78 @@ static int _if_interface_prop_read(coreconf_encoder_t *enc, const coreconf_node_
                 return _fmt_if_interface_type(enc, node, netif);
             case 1642:
                 return _fmt_if_interface_ip6(enc, node, netif);
+            case 1643:
+                return _fmt_if_interface_ip6_addr(enc, node, netif);
         }
     }
     return -1;
+}
+
+static int _if_interface_ip6_addr_write(coreconf_decoder_t *dec, const coreconf_node_t *node)
+{
+    (void)node;
+    netif_t *netif = netif_get_by_name(dec->k_param);
+    if (!netif) {
+        return -1;
+    }
+
+    /* expect a payload as {2: '2001:db8::1', 4: 64} */
+    char addr_str[IPV6_ADDR_MAX_STR_LEN] = { 0 };
+    uint8_t prefix_len;
+
+    nanocbor_value_t payload_arr;
+    if (nanocbor_enter_array(&dec->decoder, &payload_arr) != NANOCBOR_OK) {
+        goto cbor_fmt_err;
+    }
+
+    nanocbor_value_t payload_map;
+    if (nanocbor_enter_map(&payload_arr, &payload_map) != NANOCBOR_OK) {
+        goto cbor_fmt_err;
+    }
+
+    while (!nanocbor_at_end(&payload_map)) {
+        uint64_t key = 0;
+        if (nanocbor_get_uint64(&payload_map, &key) < NANOCBOR_OK) {
+            goto cbor_fmt_err;
+        }
+
+        switch (key) {
+            case 2: /* address */
+                {
+                    const uint8_t *addr_ref;
+                    size_t addr_len = 0;
+                    if (nanocbor_get_tstr(&payload_map, &addr_ref, &addr_len) != NANOCBOR_OK) {
+                        goto cbor_fmt_err;
+                    }
+                    memcpy(addr_str, addr_ref, addr_len);
+                }
+                break;
+            case 4:
+                if (nanocbor_get_uint8(&payload_map, &prefix_len) < NANOCBOR_OK) {
+                    goto cbor_fmt_err;
+                }
+                break;
+                /* prefix */
+            default:
+                goto cbor_fmt_err;
+        }
+    }
+
+    ipv6_addr_t addr;
+    uint16_t flags = GNRC_NETIF_IPV6_ADDRS_FLAGS_STATE_VALID | (prefix_len << 8U);
+
+    if (ipv6_addr_from_str(&addr, addr_str) == NULL) {
+        goto cbor_fmt_err;
+    }
+
+    if (netif_set_opt(netif, NETOPT_IPV6_ADDR, flags, &addr,
+                      sizeof(addr)) < 0) {
+        return COAP_CODE_INTERNAL_SERVER_ERROR;
+    }
+    return COAP_CODE_CREATED;
+
+cbor_fmt_err:
+    return COAP_CODE_BAD_REQUEST;
 }
 
 CORECONF_NODE(1533, COAP_GET, _if_interface, NULL);
@@ -392,5 +461,6 @@ CORECONF_NODE(1546, COAP_GET, _if_interface_prop_read, NULL);
 CORECONF_NODE(1561, COAP_GET, _if_interface_prop_read, NULL);
 
 CORECONF_NODE(1642, COAP_GET, _if_interface_prop_read, NULL);
+CORECONF_NODE(1643, COAP_GET, _if_interface_prop_read, _if_interface_ip6_addr_write);
 CORECONF_NODE(1654, COAP_GET, _if_interface_ip6_enabled, NULL);
 CORECONF_NODE(1656, COAP_GET, _if_interface_ip6_mtu, NULL);
