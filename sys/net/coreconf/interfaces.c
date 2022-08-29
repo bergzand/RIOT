@@ -293,6 +293,7 @@ static int _if_interface_ip6_mtu(coreconf_encoder_t *enc, const coreconf_node_t 
     netif_t *netif = netif_get_by_name(enc->k_param);
     if (netif) {
         _fmt_if_interface_ip6_mtu(enc, node, netif);
+        return 0;
     }
     return -1;
 }
@@ -301,8 +302,6 @@ static int _if_interface_ip6_mtu(coreconf_encoder_t *enc, const coreconf_node_t 
 static int _if_interface_prop_read(coreconf_encoder_t *enc, const coreconf_node_t *node)
 {
     netif_t *netif = netif_get_by_name(enc->k_param);
-    nanocbor_fmt_map(coreconf_encoder_cbor(enc), 1);
-    coreconf_cbor_sid(enc, 0, node->num);
     if (netif) {
         switch (node->num) {
             case 1542:
