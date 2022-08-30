@@ -419,14 +419,16 @@ static int _if_interface_ip6_addr_write(coreconf_decoder_t *dec, const coreconf_
                 {
                     const uint8_t *addr_ref;
                     size_t addr_len = 0;
-                    if (nanocbor_get_tstr(&payload_map, &addr_ref, &addr_len) != NANOCBOR_OK) {
+                    if ((nanocbor_get_tstr(&payload_map, &addr_ref, &addr_len) != NANOCBOR_OK) ||
+                            (addr_len >= IPV6_ADDR_MAX_STR_LEN)) {
                         goto cbor_fmt_err;
                     }
                     memcpy(addr_str, addr_ref, addr_len);
                 }
                 break;
             case 4:
-                if (nanocbor_get_uint8(&payload_map, &prefix_len) < NANOCBOR_OK) {
+                if ((nanocbor_get_uint8(&payload_map, &prefix_len) < NANOCBOR_OK) ||
+                        (prefix_len > 128)) {
                     goto cbor_fmt_err;
                 }
                 break;
