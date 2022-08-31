@@ -63,7 +63,6 @@ ifneq (,$(filter eepreg,$(USEMODULE)))
   FEATURES_REQUIRED += periph_eeprom
 endif
 
->>>>>>> b3e9ea4a6e (coreconf: Initial include of coreconf module)
 ifneq (,$(filter fmt_table,$(USEMODULE)))
   USEMODULE += fmt
 endif
@@ -663,6 +662,11 @@ endif
 
 ifneq (,$(filter tiny_strerror_as_strerror,$(USEMODULE)))
   USEMODULE += tiny_strerror
+endif
+
+# include coreconf dependencies
+ifneq (,$(filter coreconf coreconf_%,$(USEMODULE)))
+  include $(RIOTBASE)/sys/net/coreconf/Makefile.dep
 endif
 
 # include ztimer dependencies

@@ -32,6 +32,7 @@ USEMODULE += gcoap
 USEMODULE += coreconf
 USEMODULE += coreconf_system
 USEMODULE += coreconf_interfaces
+USEMODULE += coreconf_hardware
 
 # Required by gcoap example
 USEMODULE += od
