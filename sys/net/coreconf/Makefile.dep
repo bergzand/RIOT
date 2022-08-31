@@ -1,0 +1,3 @@
+ifneq (,$(filter coreconf_hardware,$(USEMODULE)))
+  USEMODULE += saul_reg
+endif

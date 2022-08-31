@@ -908,6 +908,11 @@ ifneq (,$(filter suit_%,$(USEMODULE)))
   USEMODULE += suit
 endif
 
+# include coreconf dependencies
+ifneq (,$(filter coreconf coreconf_%,$(USEMODULE)))
+  include $(RIOTBASE)/sys/net/coreconf/Makefile.dep
+endif
+
 # include ztimer dependencies
 ifneq (,$(filter ztimer ztimer_% %ztimer,$(USEMODULE)))
   include $(RIOTBASE)/sys/ztimer/Makefile.dep
