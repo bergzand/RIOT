@@ -31,6 +31,7 @@
 #define HARDWARE_HARDWARE_COMPONENT_SD_VAL_SID          HARDWARE_MODULE_SID + 33
 #define HARDWARE_HARDWARE_COMPONENT_SD_VAL_SCALE_SID    HARDWARE_MODULE_SID + 35
 #define HARDWARE_HARDWARE_COMPONENT_SD_VAL_TYPE_SID     HARDWARE_MODULE_SID + 37
+#define HARDWARE_HARDWARE_COMPONENT_STATE_SID              HARDWARE_MODULE_SID + 41
 
 typedef enum {
     HW_SENSOR_TYPE_OTHER = 1,
@@ -155,6 +156,9 @@ static int _fmt_hw_hardware_component_inst(coreconf_encoder_t *enc, const coreco
     }
     else {
         /* It's an actuator */
+        coreconf_cbor_sid(enc, HARDWARE_HARDWARE_COMPONENT_SID,
+                HARDWARE_HARDWARE_COMPONENT_STATE_SID);
+        nanocbor_fmt_map(coreconf_encoder_cbor(enc), 0);
     }
     return 0;
 }
