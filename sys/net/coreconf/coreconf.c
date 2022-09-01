@@ -135,9 +135,6 @@ static const coreconf_node_t *_find_coreconf_node(uint64_t sid)
         if (node->num == sid) {
             return node;
         }
-        else if (node->num > sid) {
-            break;
-        }
     }
     return NULL;
 }
