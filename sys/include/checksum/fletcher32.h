@@ -28,6 +28,14 @@ extern "C" {
 #endif
 
 /**
+ * @brief Fletcher's 32 bit checksum context struct
+ */
+typedef struct {
+    uint32_t sum1;  /**< First sum of the checksum */
+    uint32_t sum2;  /**< Second sum of the checksum */
+} fletcher32_ctx_t;
+
+/**
  * @brief Fletcher's 32 bit checksum
  *
  * found on
@@ -42,6 +50,33 @@ extern "C" {
  * @return 32 bit sized hash in the interval [1..2^32]
  */
 uint32_t fletcher32(const uint16_t *buf, size_t words);
+
+/**
+ * @brief Initialize a fletcher32 context
+ *
+ * Multi-part version of @ref fletcher32.
+ *
+ * @param[in]   ctx     fletcher32 context to initialize
+ */
+void fletcher32_init(fletcher32_ctx_t *ctx);
+
+/**
+ * @brief Update the fletcher32 context with new data
+ *
+ * @param[in]   ctx     fletcher32 context
+ * @param[in]   data    Data to add to the context
+ * @param[in]   len     Length of the data in 16 bit words
+ */
+void fletcher32_update(fletcher32_ctx_t *ctx, const uint16_t *data, size_t words);
+
+/**
+ * @brief Finalize the checksum operation and return the checksum
+ *
+ * @param[in]   ctx     fletcher32 context
+ *
+ * @return              Checksum of the data
+ */
+uint32_t fletcher32_finish(fletcher32_ctx_t *ctx);
 
 #ifdef __cplusplus
 }
