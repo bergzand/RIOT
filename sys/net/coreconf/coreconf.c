@@ -33,14 +33,15 @@ coreconf_state_t _state[CONFIG_CORECONF_COAP_STATE_NUM];
 
 #define CORECONF_XFA_TOTAL_LEN \
     (((uintptr_t)coreconf_node_xfa_zzzzzzzzz - (uintptr_t)coreconf_node_xfa) / \
-    sizeof(coreconf_node_t))
+     sizeof(coreconf_node_t))
 
 static ssize_t _encode_links(const coap_resource_t *resource, char *buf,
-                            size_t maxlen, coap_link_encoder_ctx_t *context);
+                             size_t maxlen, coap_link_encoder_ctx_t *context);
 static int _request_matcher(gcoap_listener_t *listener, const coap_resource_t
-        **resource, coap_pkt_t *pdu);
+                            **resource, coap_pkt_t *pdu);
 
-static ssize_t _coreconf_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len, coap_request_ctx_t *context);
+static ssize_t _coreconf_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len,
+                                 coap_request_ctx_t *context);
 static int _read_node(coreconf_encoder_t *enc, const coreconf_node_t *node, void **argv);
 
 static const char _link_params[] = ";ct=\"core.c.dn\"";
@@ -68,7 +69,7 @@ static gcoap_listener_t _listener = {
 static size_t coreconf_total_node_len(void)
 {
     return ((uintptr_t)coreconf_node_xfa_zzzzzzzzz_end - (uintptr_t)coreconf_node_xfa) / \
-                       sizeof(coreconf_node_t);
+           sizeof(coreconf_node_t);
 }
 
 static void _coreconf_state_refresh(coreconf_state_t *state)
@@ -86,6 +87,7 @@ static void _coreconf_state_clear(coreconf_state_t *state)
 static void _event_clear(event_t *ev)
 {
     coreconf_state_t *state = container_of(ev, coreconf_state_t, ev);
+
     _coreconf_state_clear(state);
 }
 
@@ -124,14 +126,16 @@ static coreconf_state_t *_coreconf_state_find_matching(coap_pkt_t *pdu)
 }
 
 size_t coreconf_container_len(const coreconf_node_t *container,
-        bool filter, bool config)
+                              bool filter, bool config)
 {
     size_t res = 0;
+
     if (!filter) {
         return ((uintptr_t)container->container.end - (uintptr_t)container->container.target) /
-            sizeof(coreconf_node_t);
+               sizeof(coreconf_node_t);
     }
-    const coreconf_node_t *sub = (const coreconf_node_t*)container->container.target;
+    const coreconf_node_t *sub = (const coreconf_node_t *)container->container.target;
+
     while (container->container.end != sub) {
         if (filter) {
             if (coreconf_node_config(sub) == config) {
@@ -139,7 +143,7 @@ size_t coreconf_container_len(const coreconf_node_t *container,
             }
         }
         else {
-           res++;
+            res++;
         }
         sub++;
     }
@@ -154,6 +158,7 @@ static void _sid2b64(coreconf_sid_t sid, uint8_t b64_buf[12])
     memcpy(&val_buf[1], &big_num, sizeof(uint64_t));
 
     size_t tmp_len = 12;
+
     base64url_encode(val_buf, sizeof(val_buf), b64_buf, &tmp_len);
     assert(tmp_len == 12);
 }
@@ -161,6 +166,7 @@ static void _sid2b64(coreconf_sid_t sid, uint8_t b64_buf[12])
 static size_t _b64offset(const uint8_t *b64_buf, size_t len)
 {
     size_t b64offset = 0;
+
     for (; b64offset < len; b64offset++) {
         if (b64_buf[b64offset] != 'A') {
             break;
@@ -179,6 +185,7 @@ static int _b642sid(const char *b64, size_t len, coreconf_sid_t *sid)
     memcpy(&b64buf[offset], b64, len);
 
     size_t tmp = sizeof(val_buf);
+
     if (base64_decode(b64buf, sizeof(b64buf), val_buf, &tmp) < 0) {
         return -1;
     }
@@ -193,15 +200,17 @@ static int _pdu2sid(coap_pkt_t *pdu, coreconf_sid_t *sid)
 
     size_t len = strlen(CONFIG_CORECONF_STORE_SUBTREE);
 
-    if (coap_opt_get_string(pdu, COAP_OPT_URI_PATH, (uint8_t*)url_buffer,
-                               sizeof(url_buffer), '/') <= 0) {
+    if (coap_opt_get_string(pdu, COAP_OPT_URI_PATH, (uint8_t *)url_buffer,
+                            sizeof(url_buffer), '/') <= 0) {
         /* The Uri-Path options are longer than
          * CONFIG_NANOCOAP_URI_MAX, and thus do not match anything
          * that could be found by this handler. */
         return -1;
     }
 
-    int res = strncmp(url_buffer, CONFIG_CORECONF_STORE_SUBTREE, strlen(CONFIG_CORECONF_STORE_SUBTREE));
+    int res =
+        strncmp(url_buffer, CONFIG_CORECONF_STORE_SUBTREE, strlen(CONFIG_CORECONF_STORE_SUBTREE));
+
     /* check for "/c", root of the config store */
     if (strncmp(url_buffer, CONFIG_CORECONF_STORE_SUBTREE, sizeof(url_buffer)) == 0) {
         /* signal root node */
@@ -222,7 +231,7 @@ static const coreconf_node_t *_find_coreconf_node(coreconf_sid_t sid)
 {
     (void)sid;
     for (size_t i = 0; i < coreconf_total_node_len(); i++) {
-        const coreconf_node_t *node = (const coreconf_node_t*)&coreconf_node_xfa[i];
+        const coreconf_node_t *node = (const coreconf_node_t *)&coreconf_node_xfa[i];
         /* TODO: make generic */
         if (coreconf_node_sid(node) == sid) {
             return node;
@@ -234,42 +243,45 @@ static const coreconf_node_t *_find_coreconf_node(coreconf_sid_t sid)
 static bool _node_has_read(const coreconf_node_t *node)
 {
     switch (coreconf_node_type(node)) {
-        case CORECONF_NODE_LEAF:
-            return node->leaf.read;
-        case CORECONF_NODE_CONTAINER:
-            return true;
-        default:
-            return false;
+    case CORECONF_NODE_LEAF:
+        return node->leaf.read;
+    case CORECONF_NODE_CONTAINER:
+        return true;
+    default:
+        return false;
     }
 }
 
 static bool _node_has_write(const coreconf_node_t *node)
 {
     switch (coreconf_node_type(node)) {
-        case CORECONF_NODE_LEAF:
-            return node->leaf.write;
-        case CORECONF_NODE_CONTAINER:
-            return true;
-        default:
-            return false;
+    case CORECONF_NODE_LEAF:
+        return node->leaf.write;
+    case CORECONF_NODE_CONTAINER:
+        return true;
+    default:
+        return false;
     }
 }
 
 static int _request_matcher(gcoap_listener_t *listener, const coap_resource_t
-        **resource, coap_pkt_t *pdu)
+                            **resource, coap_pkt_t *pdu)
 {
     (void)listener;
 
     unsigned code = coap_get_code_detail(pdu);
 
     coreconf_sid_t sid = 0;
+
     if (_pdu2sid(pdu, &sid) < 0) {
         return GCOAP_RESOURCE_NO_PATH;
     }
 
     if (sid == 0) {
         *resource = &_coreconf_resource;
-        if (code == COAP_METHOD_GET || code == COAP_METHOD_FETCH || code == COAP_METHOD_IPATCH) {
+        if (code == COAP_METHOD_GET ||
+                code == COAP_METHOD_FETCH ||
+                code == COAP_METHOD_IPATCH) {
             return GCOAP_RESOURCE_FOUND;
         }
 
@@ -284,7 +296,8 @@ static int _request_matcher(gcoap_listener_t *listener, const coap_resource_t
             *resource = &_coreconf_resource;
             ret = GCOAP_RESOURCE_FOUND;
         }
-        else if ((code == COAP_METHOD_PUT || code == COAP_METHOD_POST || code == COAP_METHOD_DELETE) && _node_has_write(node)) {
+        else if ((code == COAP_METHOD_PUT || code == COAP_METHOD_POST ||
+                  code == COAP_METHOD_DELETE) && _node_has_write(node)) {
             *resource = &_coreconf_resource;
             ret = GCOAP_RESOURCE_FOUND;
         }
@@ -298,7 +311,7 @@ static int _request_matcher(gcoap_listener_t *listener, const coap_resource_t
 }
 
 static ssize_t _encode_links(const coap_resource_t *resource, char *buf,
-                            size_t maxlen, coap_link_encoder_ctx_t *context)
+                             size_t maxlen, coap_link_encoder_ctx_t *context)
 {
     (void)maxlen;
     uint8_t base64_buf[12] = { 0 };
@@ -307,7 +320,8 @@ static ssize_t _encode_links(const coap_resource_t *resource, char *buf,
     size_t offset = 0;
     /* iterate over the sids present */
     size_t idx = index_of(_listener.resources, resource);
-    const coreconf_node_t *node = (const coreconf_node_t*)&coreconf_node_xfa[idx];
+    const coreconf_node_t *node = (const coreconf_node_t *)&coreconf_node_xfa[idx];
+
     _sid2b64(coreconf_node_sid(node), base64_buf);
 
     size_t b64offset = _b64offset(base64_buf, sizeof(base64_buf));
@@ -360,6 +374,7 @@ static void _nanocbor_append(nanocbor_encoder_t *enc, void *ctx, const uint8_t *
 {
     (void)enc;
     coreconf_slicer_helper_t *slice_helper = ctx;
+
     if (len == 0) {
         return;
     }
@@ -375,12 +390,13 @@ static void _nanocbor_append(nanocbor_encoder_t *enc, void *ctx, const uint8_t *
         buf++;
         slice_helper->resp_len++;
     }
-    uint16_t *u16buf = (void*)buf;
-    fletcher32_update(&slice_helper->fltchr, u16buf, len/2);
+    uint16_t *u16buf = (void *)buf;
+
+    fletcher32_update(&slice_helper->fltchr, u16buf, len / 2);
     slice_helper->resp_len += len;
     if (_is_odd(len)) {
         /* store the last byte for the next round */
-        slice_helper->fletcher_tmp = buf[len-1];
+        slice_helper->fletcher_tmp = buf[len - 1];
     }
 }
 
@@ -395,14 +411,14 @@ int coreconf_read_container(coreconf_encoder_t *enc, const coreconf_node_t *node
 
     nanocbor_fmt_map(coreconf_encoder_cbor(enc), len);
 
-    const coreconf_node_t *child = (const coreconf_node_t*)node->container.target;
+    const coreconf_node_t *child = (const coreconf_node_t *)node->container.target;
 
     while (child != node->container.end) {
         if ((enc->ctx.config == 'a') ||
-                (enc->ctx.config == 'c' && coreconf_node_config(child)) ||
-                (enc->ctx.config == 'n' && !coreconf_node_config(child))) {
+            (enc->ctx.config == 'c' && coreconf_node_config(child)) ||
+            (enc->ctx.config == 'n' && !coreconf_node_config(child))) {
             coreconf_cbor_sid(enc, coreconf_node_sid(node), coreconf_node_sid(child));
-            _read_node(enc, (const coreconf_node_t*)child, argv);
+            _read_node(enc, (const coreconf_node_t *)child, argv);
         }
         child++;
     }
@@ -431,7 +447,7 @@ static int _read_root(coreconf_encoder_t *enc, const coreconf_node_t *node, void
     nanocbor_fmt_map(coreconf_encoder_cbor(enc), len);
 
     for (size_t i = 0; i < len; i++) {
-        node = (const coreconf_node_t*)&coreconf_node_xfa_root[i];
+        node = (const coreconf_node_t *)&coreconf_node_xfa_root[i];
 
         nanocbor_fmt_uint(coreconf_encoder_cbor(enc), coreconf_node_sid(node));
         int res = _read_node(enc, node, argv);
@@ -446,6 +462,7 @@ static int _fetch_root(coreconf_encoder_t *enc)
 {
     /* Decode the payload and construct the individual bits */
     nanocbor_value_t outer, inner;
+
     nanocbor_decoder_init(&outer, enc->ctx.state->request_data, CONFIG_CORECONF_COAP_ARGS_LEN);
     if (nanocbor_enter_array(&outer, &inner) < 0) {
         return -1;
@@ -474,7 +491,8 @@ static int _fetch_root(coreconf_encoder_t *enc)
             nanocbor_skip(&inner);
         }
         else {
-            return coreconf_reply_error(&enc->ctx, NULL, CORECONF_OPERATION_FAILED, CORECONF_MALFORMED_MESSAGE, NULL);
+            return coreconf_reply_error(&enc->ctx, NULL, CORECONF_OPERATION_FAILED,
+                                        CORECONF_MALFORMED_MESSAGE, NULL);
         }
         nanocbor_fmt_map(coreconf_encoder_cbor(enc), 1);
         int res = coreconf_fmt_sid(enc, 0, sid);
@@ -492,6 +510,7 @@ int coreconf_fmt_sid(coreconf_encoder_t *enc, coreconf_sid_t parent_sid, corecon
     nanocbor_fmt_uint(coreconf_encoder_cbor(enc), fmt_sid);
 
     const coreconf_node_t *node = _find_coreconf_node(sid);
+
     if (!node) {
         return COAP_CODE_PATH_NOT_FOUND;
     }
@@ -526,7 +545,7 @@ int coreconf_get_args_num(coreconf_ctx_t *ctx, size_t num, const char **args)
 }
 
 static int _parse_uri_query(coreconf_ctx_t *ctx,
-        uint8_t *value, ssize_t optlen)
+                            uint8_t *value, ssize_t optlen)
 {
     /* checked by the caller */
     assert(optlen >= 3);
@@ -534,47 +553,47 @@ static int _parse_uri_query(coreconf_ctx_t *ctx,
         return COAP_CODE_BAD_REQUEST;
     }
     switch (value[0]) {
-        case 'k':
-            /* Option too long to copy or fetch method */
-            if (optlen > (CONFIG_CORECONF_COAP_ARGS_LEN + 1) ||
-                    ctx->state->method == COAP_METHOD_FETCH) {
-                return COAP_CODE_NOT_ACCEPTABLE;
-            }
-            /* copy only the value */
-            char *uri_query = ctx->state->uri_query;
-            memcpy(uri_query, &value[2], optlen - 2);
-            char *pos = uri_query;
-            while ((pos = strchr(pos, ',')) != NULL) {
-                *pos++ = '\0';
-            }
+    case 'k':
+        /* Option too long to copy or fetch method */
+        if (optlen > (CONFIG_CORECONF_COAP_ARGS_LEN + 1) ||
+            ctx->state->method == COAP_METHOD_FETCH) {
+            return COAP_CODE_NOT_ACCEPTABLE;
+        }
+        /* copy only the value */
+        char *uri_query = ctx->state->uri_query;
+        memcpy(uri_query, &value[2], optlen - 2);
+        char *pos = uri_query;
+        while ((pos = strchr(pos, ',')) != NULL) {
+            *pos++ = '\0';
+        }
+        return 0;
+    case 'c':
+    {
+        char setting = value[2];
+        if (optlen == 3 && (
+                setting == 'a' ||
+                setting == 'c' ||
+                setting == 'n'
+                )) {
+            ctx->config = setting;
             return 0;
-        case 'c':
-            {
-                char setting = value[2];
-                if (optlen == 3 && (
-                            setting == 'a' ||
-                            setting == 'c' ||
-                            setting == 'n'
-                            )) {
-                    ctx->config = setting;
-                    return 0;
-                }
-                return COAP_CODE_BAD_REQUEST;
-            }
-        case 'd':
-            {
-                char setting = value[2];
-                if (optlen == 3 && (
-                            setting == 'a' ||
-                            setting == 't'
-                            )) {
-                    ctx->with_default = setting;
-                    return 0;
-                }
-                return COAP_CODE_BAD_REQUEST;
-            }
-        default:
-            return COAP_CODE_BAD_REQUEST;
+        }
+        return COAP_CODE_BAD_REQUEST;
+    }
+    case 'd':
+    {
+        char setting = value[2];
+        if (optlen == 3 && (
+                setting == 'a' ||
+                setting == 't'
+                )) {
+            ctx->with_default = setting;
+            return 0;
+        }
+        return COAP_CODE_BAD_REQUEST;
+    }
+    default:
+        return COAP_CODE_BAD_REQUEST;
     }
 }
 
@@ -585,6 +604,7 @@ static int _parse_opts(coap_pkt_t *pdu, coreconf_ctx_t *ctx)
     };
     uint8_t *value;
     ssize_t optlen;
+
     /* Needs the etag, block2, the uri queries and at some point the block1 */
     while ((optlen = coap_opt_get_next(pdu, &opt, &value, 0)) != -ENOENT) {
 
@@ -593,52 +613,53 @@ static int _parse_opts(coap_pkt_t *pdu, coreconf_ctx_t *ctx)
         }
 
         switch (opt.opt_num) {
-            case COAP_OPT_URI_HOST:
-            case COAP_OPT_URI_PATH:
-                break;
-            case COAP_OPT_URI_QUERY:
-                /* Expecting values as k=something, must be at least 3 chars
-                 * long */
-                if (optlen < 3) {
-                    return COAP_CODE_BAD_REQUEST;
+        case COAP_OPT_URI_HOST:
+        case COAP_OPT_URI_PATH:
+            break;
+        case COAP_OPT_URI_QUERY:
+            /* Expecting values as k=something, must be at least 3 chars
+             * long */
+            if (optlen < 3) {
+                return COAP_CODE_BAD_REQUEST;
+            }
+            else {
+                int res = _parse_uri_query(ctx, value, optlen);
+                if (res != 0) {
+                    return res;
                 }
-                else {
-                    int res = _parse_uri_query(ctx, value, optlen);
-                    if (res != 0) {
-                        return res;
-                    }
-                }
-                break;
-            case COAP_OPT_ETAG:
-                if (optlen != sizeof(ctx->etag)) {
-                    /* Can't be a matching tag, no use in carrying that */
-                    continue;
-                }
-                if (ctx->etag_sent) {
-                    /* We can reasonably only check for a limited sized set,
-                     * and it size is 1 here (sending multiple ETags is
-                     * possible but rare) */
-                    continue;
-                }
-                ctx->etag_sent = true;
-                memcpy(&ctx->etag, value, sizeof(ctx->etag));
-                break;
-            case COAP_OPT_BLOCK2:
-                coap_get_blockopt(pdu, COAP_OPT_BLOCK2, &ctx->blocknum2, &ctx->szx2);
-                break;
-            default:
-                if (opt.opt_num & 1) {
-                    return COAP_CODE_BAD_REQUEST;
-                }
-                else {
-                    /* Ignoring elective option */
-                }
+            }
+            break;
+        case COAP_OPT_ETAG:
+            if (optlen != sizeof(ctx->etag)) {
+                /* Can't be a matching tag, no use in carrying that */
+                continue;
+            }
+            if (ctx->etag_sent) {
+                /* We can reasonably only check for a limited sized set,
+                 * and it size is 1 here (sending multiple ETags is
+                 * possible but rare) */
+                continue;
+            }
+            ctx->etag_sent = true;
+            memcpy(&ctx->etag, value, sizeof(ctx->etag));
+            break;
+        case COAP_OPT_BLOCK2:
+            coap_get_blockopt(pdu, COAP_OPT_BLOCK2, &ctx->blocknum2, &ctx->szx2);
+            break;
+        default:
+            if (opt.opt_num & 1) {
+                return COAP_CODE_BAD_REQUEST;
+            }
+            else {
+                /* Ignoring elective option */
+            }
         }
     }
     return 0;
 }
 
-static ssize_t _coreconf_read_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len, coap_request_ctx_t *context)
+static ssize_t _coreconf_read_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len,
+                                      coap_request_ctx_t *context)
 {
     (void)context;
     coreconf_encoder_t encoder;
@@ -646,6 +667,7 @@ static ssize_t _coreconf_read_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len,
     _init_encoder(&encoder);
 
     coreconf_state_t *state = _coreconf_state_find_matching(pdu);
+
     if (!state) {
         state = _coreconf_state_new(pdu);
     }
@@ -659,10 +681,12 @@ static ssize_t _coreconf_read_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len,
     assert(encoder.ctx.state);
 
     coreconf_sid_t sid = 0;
+
     if (_pdu2sid(pdu, &sid)) {
         return gcoap_response(pdu, buf, len, COAP_CODE_NOT_ACCEPTABLE);
     }
     int res = _parse_opts(pdu, &encoder.ctx);
+
     if (res < 0) {
         return res;
     }
@@ -681,7 +705,7 @@ static ssize_t _coreconf_read_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len,
 
     /* initialize response packet */
     coap_block_slicer_init(&encoder.slicer.slicer,
-            encoder.ctx.blocknum2, coap_szx2size(encoder.ctx.szx2));
+                           encoder.ctx.blocknum2, coap_szx2size(encoder.ctx.szx2));
     gcoap_resp_init(pdu, buf, len, COAP_CODE_CONTENT);
 
     coap_opt_add_opaque(pdu, COAP_OPT_ETAG, &etag, sizeof(etag));
@@ -732,7 +756,8 @@ static ssize_t _coreconf_read_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len,
     /* Adding the length to the checksum prevents issues with the additional
      * zero byte with odd length payloads */
     uint32_t total_len = encoder.slicer.resp_len;
-    fletcher32_update(&encoder.slicer.fltchr, (uint16_t*)&total_len, sizeof(total_len) / 2);
+
+    fletcher32_update(&encoder.slicer.fltchr, (uint16_t *)&total_len, sizeof(total_len) / 2);
     etag = fletcher32_finish(&encoder.slicer.fltchr);
     if (!more) {
         _coreconf_state_clear(state);
@@ -740,7 +765,7 @@ static ssize_t _coreconf_read_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len,
 
     if (encoder.ctx.etag_sent && etag == encoder.ctx.etag) {
         return gcoap_response(pdu, buf, len, COAP_CODE_VALID);
-    };
+    }
 
     /* Copy in the etag */
     memcpy(etag_ptr - sizeof(etag), &etag, sizeof(etag));
@@ -749,13 +774,16 @@ static ssize_t _coreconf_read_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len,
     return resp_len + encoder.slicer.sliced_length;
 }
 
-static ssize_t _coreconf_write_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len, coap_request_ctx_t *context)
+static ssize_t _coreconf_write_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len,
+                                       coap_request_ctx_t *context)
 {
     (void)context;
     coreconf_decoder_t decoder;
+
     _init_decoder(&decoder);
 
     coreconf_state_t *state = _coreconf_state_find_matching(pdu);
+
     if (!state) {
         state = _coreconf_state_new(pdu);
     }
@@ -770,11 +798,13 @@ static ssize_t _coreconf_write_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len
     decoder.ctx.state->method = coap_get_code_raw(pdu);
 
     int res = _parse_opts(pdu, &decoder.ctx);
+
     if (res < 0) {
         return res;
     }
 
     coreconf_sid_t sid = 0;
+
     if (_pdu2sid(pdu, &sid) < 0) {
         return gcoap_response(pdu, buf, len, COAP_CODE_NOT_ACCEPTABLE);
     }
@@ -820,16 +850,16 @@ static ssize_t _coreconf_write_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len
     ssize_t wres = 0;
 
     switch (coreconf_node_type(node)) {
-        case CORECONF_NODE_LEAF:
-            wres = node->leaf.write(&decoder, node, argv);
-            break;
-        case CORECONF_NODE_CONTAINER:
-            if (node->container.aux && node->container.aux->write) {
-                wres = node->container.aux->write(&decoder, node, argv);
-            }
-            break;
-        default:
-            wres = CORECONF_ERR_NOT_FOUND;
+    case CORECONF_NODE_LEAF:
+        wres = node->leaf.write(&decoder, node, argv);
+        break;
+    case CORECONF_NODE_CONTAINER:
+        if (node->container.aux && node->container.aux->write) {
+            wres = node->container.aux->write(&decoder, node, argv);
+        }
+        break;
+    default:
+        wres = CORECONF_ERR_NOT_FOUND;
     }
 
 
@@ -848,18 +878,19 @@ cbor_fmt_err:
     return gcoap_response(pdu, buf, len, COAP_CODE_BAD_REQUEST);
 }
 
-static ssize_t _coreconf_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len, coap_request_ctx_t *context)
+static ssize_t _coreconf_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len,
+                                 coap_request_ctx_t *context)
 {
     switch (coap_get_code_raw(pdu)) {
-        case COAP_METHOD_FETCH:
-        case COAP_METHOD_GET:
-            return _coreconf_read_handler(pdu, buf, len, context);
-        case COAP_METHOD_POST:
-        case COAP_METHOD_PUT:
-        case COAP_METHOD_DELETE:
-            return _coreconf_write_handler(pdu, buf, len, context);
-        default:
-            return gcoap_response(pdu, buf, len, COAP_CODE_METHOD_NOT_ALLOWED);
+    case COAP_METHOD_FETCH:
+    case COAP_METHOD_GET:
+        return _coreconf_read_handler(pdu, buf, len, context);
+    case COAP_METHOD_POST:
+    case COAP_METHOD_PUT:
+    case COAP_METHOD_DELETE:
+        return _coreconf_write_handler(pdu, buf, len, context);
+    default:
+        return gcoap_response(pdu, buf, len, COAP_CODE_METHOD_NOT_ALLOWED);
     }
 }
 
@@ -872,6 +903,7 @@ void coreconf_init(void)
 static const char *_coreconf_arg_uri_at(const coreconf_state_t *state, size_t pos)
 {
     const char *arg = state->uri_query;
+
     while (pos--) {
         arg += strlen(arg) + 1;
     }
@@ -881,6 +913,7 @@ static const char *_coreconf_arg_uri_at(const coreconf_state_t *state, size_t po
 int coreconf_arg_as_uint(const coreconf_ctx_t *ctx, int offset, uint64_t *val)
 {
     const coreconf_state_t *state = ctx->state;
+
     assert(offset >= 0);
 
     if (state->method == COAP_METHOD_GET) {
@@ -892,7 +925,7 @@ int coreconf_arg_as_uint(const coreconf_ctx_t *ctx, int offset, uint64_t *val)
         if (!fmt_is_number(arg)) {
             return -1;
         }
-        *val  = scn_u32_dec(arg, strlen(arg));
+        *val = scn_u32_dec(arg, strlen(arg));
         return 0;
     }
     else if (state->method == COAP_METHOD_FETCH) {
@@ -905,6 +938,7 @@ int coreconf_arg_as_uint(const coreconf_ctx_t *ctx, int offset, uint64_t *val)
 int coreconf_arg_as_str(const coreconf_ctx_t *ctx, int offset, const char **val)
 {
     const coreconf_state_t *state = ctx->state;
+
     assert(offset >= 0);
 
     if (state->method == COAP_METHOD_GET ||
@@ -919,7 +953,7 @@ int coreconf_arg_as_str(const coreconf_ctx_t *ctx, int offset, const char **val)
         return 0;
     }
     else if (state->method == COAP_METHOD_FETCH ||
-            state->method == COAP_METHOD_IPATCH) {
+             state->method == COAP_METHOD_IPATCH) {
         /* decode as cbor from payload */
         if (nanocbor_at_end(&ctx->decoder)) {
             /* No argument */
@@ -930,7 +964,7 @@ int coreconf_arg_as_str(const coreconf_ctx_t *ctx, int offset, const char **val)
             nanocbor_skip(&decoder);
         }
         size_t len;
-        if (nanocbor_get_tstr(&decoder, (const uint8_t**)val, &len) < 0) {
+        if (nanocbor_get_tstr(&decoder, (const uint8_t **)val, &len) < 0) {
             return -1;
         }
         return 0;
@@ -939,21 +973,23 @@ int coreconf_arg_as_str(const coreconf_ctx_t *ctx, int offset, const char **val)
 }
 
 ssize_t coreconf_reply_error(const coreconf_ctx_t *ctx,
-        const coreconf_node_t *node, coreconf_error_tag_t error_tag,
-        coreconf_app_tag_t app_tag, const char *error_msg)
+                             const coreconf_node_t *node, coreconf_error_tag_t error_tag,
+                             coreconf_app_tag_t app_tag, const char *error_msg)
 {
-    gcoap_resp_init(ctx->pdu, (uint8_t*)ctx->pdu->hdr, ctx->pdu_len, COAP_CODE_BAD_REQUEST);
+    gcoap_resp_init(ctx->pdu, (uint8_t *)ctx->pdu->hdr, ctx->pdu_len, COAP_CODE_BAD_REQUEST);
     coap_opt_add_format(ctx->pdu, CORECONF_COAP_FORMAT); /* Yang data + cbor */
     ssize_t resp_len = coap_opt_finish(ctx->pdu, COAP_OPT_FINISH_PAYLOAD);
     size_t remaining_len = ctx->pdu_len - resp_len;
 
     coreconf_sid_t sid = 0;
+
     if (node) {
         sid = coreconf_node_sid(node);
     }
 
     nanocbor_encoder_t enc;
-    nanocbor_encoder_init(&enc, (uint8_t*)ctx->pdu->payload, remaining_len);
+
+    nanocbor_encoder_init(&enc, (uint8_t *)ctx->pdu->payload, remaining_len);
 
     nanocbor_fmt_map(&enc, 1);
     nanocbor_fmt_uint(&enc, 1024);
@@ -979,4 +1015,3 @@ ssize_t coreconf_reply_error(const coreconf_ctx_t *ctx,
     }
     return resp_len + encoded_len;
 }
-

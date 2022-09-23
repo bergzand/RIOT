@@ -22,7 +22,8 @@
 
 ssize_t coreconf_render_sid(coap_pkt_t *pkt, uint8_t *buf, size_t len, uint64_t sid);
 
-static int _system_platform_machine_node(coreconf_encoder_t *enc, const coreconf_node_t *node, void **argv)
+static int _system_platform_machine_node(coreconf_encoder_t *enc, const coreconf_node_t *node,
+                                         void **argv)
 {
     (void)node;
     (void)argv;
@@ -30,7 +31,8 @@ static int _system_platform_machine_node(coreconf_encoder_t *enc, const coreconf
     return 0;
 }
 
-static int _system_platform_osname_node(coreconf_encoder_t *enc, const coreconf_node_t *node, void **argv)
+static int _system_platform_osname_node(coreconf_encoder_t *enc, const coreconf_node_t *node,
+                                        void **argv)
 {
     (void)node;
     (void)argv;
@@ -38,7 +40,8 @@ static int _system_platform_osname_node(coreconf_encoder_t *enc, const coreconf_
     return 0;
 }
 
-static int _system_platform_osrelease_node(coreconf_encoder_t *enc, const coreconf_node_t *node, void **argv)
+static int _system_platform_osrelease_node(coreconf_encoder_t *enc, const coreconf_node_t *node,
+                                           void **argv)
 {
     (void)node;
     (void)argv;
@@ -65,7 +68,8 @@ static int _system_platform_osrelease_node(coreconf_encoder_t *enc, const coreco
     return 0;
 }
 
-static int _system_platform_osversion_node(coreconf_encoder_t *enc, const coreconf_node_t *node, void **argv)
+static int _system_platform_osversion_node(coreconf_encoder_t *enc, const coreconf_node_t *node,
+                                           void **argv)
 {
     (void)node;
     (void)argv;

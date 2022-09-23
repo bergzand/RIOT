@@ -122,13 +122,13 @@ typedef uint32_t coreconf_sid_t;
  * Used in CORECONF error replies
  */
 typedef enum {
-    CORECONF_ERROR = 1005,
-    CORECONF_OPERATION_FAILED = 1019,
-    CORECONF_INVALID_VALUE = 1011,
-    CORECONF_MISSING_ELEMENT = 1014,
-    CORECONF_UNKNOWN_ELEMENT = 1023,
-    CORECONF_BAD_ELEMENT = 1001,
-    CORECONF_DATA_MISSING = 1002,
+    CORECONF_ERROR              = 1005,
+    CORECONF_OPERATION_FAILED   = 1019,
+    CORECONF_INVALID_VALUE      = 1011,
+    CORECONF_MISSING_ELEMENT    = 1014,
+    CORECONF_UNKNOWN_ELEMENT    = 1023,
+    CORECONF_BAD_ELEMENT        = 1001,
+    CORECONF_DATA_MISSING       = 1002,
 } coreconf_error_tag_t;
 
 /**
@@ -137,28 +137,28 @@ typedef enum {
  * Used in CORECONF error replies
  */
 typedef enum {
-    CORECONF_MALFORMED_MESSAGE = 1012,
-    CORECONF_DATA_NOT_UNIQUE = 1003,
-    CORECONF_TOO_MANY_ELEMENTS = 1022,
-    CORECONF_TOO_FEW_ELEMENTS = 1021,
-    CORECONF_MUST_VIOLATION = 1017,
-    CORECONF_DUPLICATE = 1004,
-    CORECONF_INVALID_DATA_TYPE = 1009,
-    CORECONF_NOT_IN_RANGE = 1018,
-    CORECONF_INVALID_LENGTH = 1010,
-    CORECONF_PATTERN_TEST_FAILED = 1020,
-    CORECONF_MISSING_KEY = 1016,
-    CORECONF_MISSING_INPUT_PARAMETER = 1015,
-    CORECONF_INSTANCE_REQUIRED = 1008,
-    CORECONF_MISSING_CHOICE = 1013,
+    CORECONF_MALFORMED_MESSAGE          = 1012,
+    CORECONF_DATA_NOT_UNIQUE            = 1003,
+    CORECONF_TOO_MANY_ELEMENTS          = 1022,
+    CORECONF_TOO_FEW_ELEMENTS           = 1021,
+    CORECONF_MUST_VIOLATION             = 1017,
+    CORECONF_DUPLICATE                  = 1004,
+    CORECONF_INVALID_DATA_TYPE          = 1009,
+    CORECONF_NOT_IN_RANGE               = 1018,
+    CORECONF_INVALID_LENGTH             = 1010,
+    CORECONF_PATTERN_TEST_FAILED        = 1020,
+    CORECONF_MISSING_KEY                = 1016,
+    CORECONF_MISSING_INPUT_PARAMETER    = 1015,
+    CORECONF_INSTANCE_REQUIRED          = 1008,
+    CORECONF_MISSING_CHOICE             = 1013,
 } coreconf_app_tag_t;
 
 /**
  * @brief CORECONF handler function error codes
  */
 enum {
-    CORECONF_ERR_NOT_FOUND = -1,        /**< Resource requested not found */
-    CORECONF_ERR_INTERNAL_SERVER = -2,  /**< Internal server error */
+    CORECONF_ERR_NOT_FOUND          = -1,   /**< Resource requested not found */
+    CORECONF_ERR_INTERNAL_SERVER    = -2,   /**< Internal server error */
 };
 
 /**
@@ -192,8 +192,8 @@ typedef struct {
      * @brief request data for get (uri query string) or fetch (payload)
      */
     union {
-        char uri_query[CONFIG_CORECONF_COAP_ARGS_LEN]; /**< Uri query */
-        uint8_t request_data[CONFIG_CORECONF_COAP_ARGS_LEN]; /**< fetch payload */
+        char uri_query[CONFIG_CORECONF_COAP_ARGS_LEN];          /**< Uri query */
+        uint8_t request_data[CONFIG_CORECONF_COAP_ARGS_LEN];    /**< fetch payload */
     };
 } coreconf_state_t;
 
@@ -203,14 +203,14 @@ typedef struct {
  * Used with all types of requests
  */
 typedef struct {
-    coap_pkt_t *pdu;    /**< Pointer to the request/response PDU */
-    size_t pdu_len;     /**< Length of the pdu */
-    uint32_t etag;      /**< Etag of the pdu */
-    uint32_t blocknum2; /**< block2 number requested*/
-    uint8_t szx2;       /**< Size exponent of the block number */
-    bool etag_sent;     /**< Signals whether there is an etag */
-    char config;        /**< Config argument */
-    char with_default;  /**< defaults argument */
+    coap_pkt_t *pdu;            /**< Pointer to the request/response PDU */
+    size_t pdu_len;             /**< Length of the pdu */
+    uint32_t etag;              /**< Etag of the pdu */
+    uint32_t blocknum2;         /**< block2 number requested*/
+    uint8_t szx2;               /**< Size exponent of the block number */
+    bool etag_sent;             /**< Signals whether there is an etag */
+    char config;                /**< Config argument */
+    char with_default;          /**< defaults argument */
 
     coreconf_state_t *state;    /**< Ptr to the @ref coreconf_state_t */
     nanocbor_value_t decoder;   /**< CBOR decoder state */
@@ -244,8 +244,8 @@ typedef struct {
  */
 typedef ssize_t (*coreconf_node_read_handler_t)
     (coreconf_encoder_t *encoder,
-     const coreconf_node_t *node,
-     void **argv);
+    const coreconf_node_t *node,
+    void **argv);
 
 /**
  * @brief CORECONF node write function.
@@ -258,8 +258,8 @@ typedef ssize_t (*coreconf_node_read_handler_t)
  */
 typedef ssize_t (*coreconf_node_write_handler_t)
     (coreconf_decoder_t *decoder,
-     const coreconf_node_t *node,
-     void **argv);
+    const coreconf_node_t *node,
+    void **argv);
 
 /**
  * @brief Argument parser for YANG container list types.
@@ -270,18 +270,18 @@ typedef ssize_t (*coreconf_node_write_handler_t)
  */
 typedef ssize_t (*coreconf_node_arg_handler_t)
     (coreconf_ctx_t *ctx,
-     const coreconf_node_t *node,
-     void **argv);
+    const coreconf_node_t *node,
+    void **argv);
 
 /**
  * @brief CORECONF XFA node types
  */
 enum {
-    CORECONF_NODE_LEAF       = 1,  /**< Leaf type */
-    CORECONF_NODE_LEAF_LIST  = 2,  /**< Leaf list type */
-    CORECONF_NODE_CONTAINER  = 3,  /**< Container node */
-    CORECONF_NODE_LIST       = 4,  /**< List type container */
-    CORECONF_NODE_DATA_STORE = 5,  /**< Also a container */
+    CORECONF_NODE_LEAF          = 1,    /**< Leaf type */
+    CORECONF_NODE_LEAF_LIST     = 2,    /**< Leaf list type */
+    CORECONF_NODE_CONTAINER     = 3,    /**< Container node */
+    CORECONF_NODE_LIST          = 4,    /**< List type container */
+    CORECONF_NODE_DATA_STORE    = 5,    /**< Also a container */
 };
 
 /**
@@ -312,20 +312,20 @@ typedef struct {
  * @brief Functions and data for YANG containers and container list nodes
  */
 typedef struct {
-    coreconf_sid_t num;                     /**< SID value of the container node */
-    const volatile coreconf_node_t *target; /**< First element of the container XFA */
-    const volatile coreconf_node_t *end;    /**< End marker of the container XFA */
-    const volatile coreconf_node_container_aux_t *aux; /**< Ptr to extra data */
+    coreconf_sid_t num;                                 /**< SID value of the container node */
+    const volatile coreconf_node_t *target;             /**< First element of the container XFA */
+    const volatile coreconf_node_t *end;                /**< End marker of the container XFA */
+    const volatile coreconf_node_container_aux_t *aux;  /**< Ptr to extra data */
 } coreconf_node_container_t;
 
 /**
  * @brief CORECONF XFA node
  */
 struct coreconf_node {
-    uint16_t type; /**< Node type and flags */
+    uint16_t type;                              /**< Node type and flags */
     union {
-        coreconf_node_leaf_t leaf;           /**< Leaf type members */
-        coreconf_node_container_t container; /**< Container type members */
+        coreconf_node_leaf_t leaf;              /**< Leaf type members */
+        coreconf_node_container_t container;    /**< Container type members */
     };
 };
 
@@ -366,7 +366,7 @@ static inline bool coreconf_args_empty(const coreconf_ctx_t *ctx)
 {
     assert(ctx->state);
     return (coreconf_ctx_get_method(ctx) == COAP_METHOD_GET && ctx->state->uri_query[0] == '\0') ||
-        (coreconf_ctx_get_method(ctx) == COAP_METHOD_FETCH && nanocbor_at_end(&ctx->decoder));
+           (coreconf_ctx_get_method(ctx) == COAP_METHOD_FETCH && nanocbor_at_end(&ctx->decoder));
 }
 
 static inline bool coreconf_enc_args_empty(const coreconf_encoder_t *enc)
@@ -384,7 +384,8 @@ static inline int64_t coreconf_sid_diff(coreconf_sid_t mysid, coreconf_sid_t sid
     return sid - mysid;
 }
 
-static inline void coreconf_cbor_sid(coreconf_encoder_t *enc, coreconf_sid_t mysid, coreconf_sid_t sid)
+static inline void coreconf_cbor_sid(coreconf_encoder_t *enc, coreconf_sid_t mysid,
+                                     coreconf_sid_t sid)
 {
     nanocbor_fmt_int(coreconf_encoder_cbor(enc), coreconf_sid_diff(mysid, sid));
 }
@@ -402,12 +403,12 @@ static inline bool coreconf_node_config(const coreconf_node_t *node)
 static inline coreconf_sid_t coreconf_node_sid(const coreconf_node_t *node)
 {
     switch (coreconf_node_type(node)) {
-        case CORECONF_NODE_LEAF:
-            return node->leaf.num;
-        case CORECONF_NODE_CONTAINER:
-            return node->container.num;
-        default:
-            return 0;
+    case CORECONF_NODE_LEAF:
+        return node->leaf.num;
+    case CORECONF_NODE_CONTAINER:
+        return node->container.num;
+    default:
+        return 0;
     }
 }
 
@@ -435,8 +436,8 @@ int coreconf_arg_as_str(const coreconf_ctx_t *ctx, int offset, const char **val)
  * @returns Size of the reply
  */
 ssize_t coreconf_reply_error(const coreconf_ctx_t *ctx,
-        const coreconf_node_t *node, coreconf_error_tag_t error_tag,
-        coreconf_app_tag_t app_tag, const char *error_msg);
+                             const coreconf_node_t *node, coreconf_error_tag_t error_tag,
+                             coreconf_app_tag_t app_tag, const char *error_msg);
 
 #define _CORECONF_CONCAT_HELPER(a, b)    a ## b
 #define _CORECONF_CONCAT(a, b)  _CORECONF_CONCAT_HELPER(a, b)
@@ -473,48 +474,48 @@ ssize_t coreconf_reply_error(const coreconf_ctx_t *ctx,
                 .num = _num, \
                 .read = _read, \
                 .write = _write } \
-            }
+        }
 
 #define CORECONF_CONTAINER_AUX(name, _parse, _read, _write) \
     _CORECONF_XFA_CONST_WRAPPER(_CORECONF_XFA_AUX_NAME(aux_), name)  \
     coreconf_node_container_aux_t _CORECONF_CONCAT(_CORECONF_XFA_AUX_NAME(aux_), name) \
         = { \
-            .parse = _parse, \
-            .read = _read, \
-            .write = _write}
+        .parse = _parse, \
+        .read = _read, \
+        .write = _write }
 
 #define CORECONF_CONTAINER_SUBTYPE(_container, name, _num, _config, _type, _aux) \
     _CORECONF_XFA_INIT_CONST_WRAPPER(coreconf_node_t, _CORECONF_XFA_NAME(name)); \
     _CORECONF_XFA_CONST_WRAPPER(_CORECONF_XFA_NAME(_container), _num)  \
     coreconf_node_t _CORECONF_CONCAT(_CORECONF_XFA_NAME__(_container), _num) \
         = { \
-            .type = _type | _config, \
-            .container = { \
-                .num = _num, \
-                .target = _CORECONF_XFA_NAME(name), \
-                .end = _CORECONF_CONCAT(_CORECONF_XFA_NAME(name), _end), \
-                .aux = _aux, \
-            } \
+        .type = _type | _config, \
+        .container = { \
+            .num = _num, \
+            .target = _CORECONF_XFA_NAME(name), \
+            .end = _CORECONF_CONCAT(_CORECONF_XFA_NAME(name), _end), \
+            .aux = _aux, \
+        } \
         }
 
 #define CORECONF_CONTAINER_SUBTYPE_AUX(_container, name, _num, _config, _type, \
-        _parse, _read, _write) \
+                                       _parse, _read, _write) \
     CORECONF_CONTAINER_AUX(name, _parse, _read, _write); \
     CORECONF_CONTAINER_SUBTYPE(_container, name, _num, _config, _type, \
-            &_CORECONF_CONCAT(_CORECONF_XFA_AUX_NAME(aux_), name))
+                               &_CORECONF_CONCAT(_CORECONF_XFA_AUX_NAME(aux_), name))
 
 #define CORECONF_CONTAINER(container, name, _num, _config)     \
     CORECONF_CONTAINER_SUBTYPE(container, name, _num, _config, \
-            CORECONF_NODE_CONTAINER, NULL)
+                               CORECONF_NODE_CONTAINER, NULL)
 
 #define CORECONF_CONTAINER_ADV(container, name, _num, _config, _parse, \
-        _read, _write) \
-        CORECONF_CONTAINER_SUBTYPE_AUX(container, name, _num, \
-            _config, CORECONF_NODE_CONTAINER, _parse, _read, _write)
+                               _read, _write) \
+    CORECONF_CONTAINER_SUBTYPE_AUX(container, name, _num, \
+                                   _config, CORECONF_NODE_CONTAINER, _parse, _read, _write)
 
 #define CORECONF_CONTAINER_LIST(container, name, _num, _config, _parse, _read, _write)  \
     CORECONF_CONTAINER_SUBTYPE_AUX(container, name, _num, _config, \
-            CORECONF_NODE_CONTAINER, _parse, _read, _write)
+                                   CORECONF_NODE_CONTAINER, _parse, _read, _write)
 #ifdef __cplusplus
 }
 #endif
