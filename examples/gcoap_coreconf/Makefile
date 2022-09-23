@@ -33,6 +33,8 @@ USEMODULE += coreconf
 USEMODULE += coreconf_system
 USEMODULE += coreconf_interfaces
 USEMODULE += coreconf_hardware
+# include and auto-initialize all available sensors
+USEMODULE += saul_default
 
 # Required by gcoap example
 USEMODULE += od
