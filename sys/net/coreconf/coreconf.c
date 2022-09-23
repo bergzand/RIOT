@@ -400,7 +400,7 @@ static void _nanocbor_append(nanocbor_encoder_t *enc, void *ctx, const uint8_t *
     }
 }
 
-int coreconf_read_container(coreconf_encoder_t *enc, const coreconf_node_t *node, void **argv)
+ssize_t coreconf_read_container(coreconf_encoder_t *enc, const coreconf_node_t *node, void **argv)
 {
     assert(coreconf_node_type(node) == CORECONF_NODE_CONTAINER);
     if (node->container.aux && node->container.aux->read) {
@@ -418,14 +418,17 @@ int coreconf_read_container(coreconf_encoder_t *enc, const coreconf_node_t *node
             (enc->ctx.config == 'c' && coreconf_node_config(child)) ||
             (enc->ctx.config == 'n' && !coreconf_node_config(child))) {
             coreconf_cbor_sid(enc, coreconf_node_sid(node), coreconf_node_sid(child));
-            _read_node(enc, (const coreconf_node_t *)child, argv);
+            ssize_t res = _read_node(enc, (const coreconf_node_t *)child, argv);
+            if (res != 0) {
+                return res;
+            }
         }
         child++;
     }
     return 0;
 }
 
-static int _read_node(coreconf_encoder_t *enc, const coreconf_node_t *node, void **argv)
+static ssize_t _read_node(coreconf_encoder_t *enc, const coreconf_node_t *node, void **argv)
 {
     if (coreconf_node_type(node) == CORECONF_NODE_CONTAINER) {
         if (node->container.aux && node->container.aux->parse) {
@@ -440,7 +443,24 @@ static int _read_node(coreconf_encoder_t *enc, const coreconf_node_t *node, void
     }
 }
 
-static int _read_root(coreconf_encoder_t *enc, const coreconf_node_t *node, void **argv)
+static ssize_t _fmt_sid(coreconf_encoder_t *enc, coreconf_sid_t parent_sid, coreconf_sid_t sid)
+{
+    coreconf_sid_t fmt_sid = sid - parent_sid;
+
+    nanocbor_fmt_uint(coreconf_encoder_cbor(enc), fmt_sid);
+
+    const coreconf_node_t *node = _find_coreconf_node(sid);
+
+    if (!node) {
+        return CORECONF_ERR_NOT_FOUND;
+    }
+
+    void *argv[CONFIG_CORECONF_COAP_ARGS_NUM] = { 0 };
+
+    return _read_node(enc, node, argv);
+}
+
+static ssize_t _read_root(coreconf_encoder_t *enc, const coreconf_node_t *node, void **argv)
 {
     size_t len = XFA_LEN(coreconf_node_t, coreconf_node_xfa_root);
 
@@ -450,22 +470,23 @@ static int _read_root(coreconf_encoder_t *enc, const coreconf_node_t *node, void
         node = (const coreconf_node_t *)&coreconf_node_xfa_root[i];
 
         nanocbor_fmt_uint(coreconf_encoder_cbor(enc), coreconf_node_sid(node));
-        int res = _read_node(enc, node, argv);
-        if (res < 0) {
+        ssize_t res = _read_node(enc, node, argv);
+        if (res != 0) {
             return res;
         }
     }
     return 0;
 }
 
-static int _fetch_root(coreconf_encoder_t *enc)
+static ssize_t _fetch_root(coreconf_encoder_t *enc)
 {
     /* Decode the payload and construct the individual bits */
     nanocbor_value_t outer, inner;
 
     nanocbor_decoder_init(&outer, enc->ctx.state->request_data, CONFIG_CORECONF_COAP_ARGS_LEN);
     if (nanocbor_enter_array(&outer, &inner) < 0) {
-        return -1;
+        return coreconf_reply_error(&enc->ctx, NULL, CORECONF_OPERATION_FAILED,
+                                    CORECONF_MALFORMED_MESSAGE, NULL);
     }
 
     size_t num_sids = nanocbor_container_remaining(&inner);
@@ -495,31 +516,12 @@ static int _fetch_root(coreconf_encoder_t *enc)
                                         CORECONF_MALFORMED_MESSAGE, NULL);
         }
         nanocbor_fmt_map(coreconf_encoder_cbor(enc), 1);
-        int res = coreconf_fmt_sid(enc, 0, sid);
+        ssize_t res = _fmt_sid(enc, 0, sid);
         if (res != 0) {
             return res;
         }
     }
     return 0;
-}
-
-int coreconf_fmt_sid(coreconf_encoder_t *enc, coreconf_sid_t parent_sid, coreconf_sid_t sid)
-{
-    coreconf_sid_t fmt_sid = sid - parent_sid;
-
-    nanocbor_fmt_uint(coreconf_encoder_cbor(enc), fmt_sid);
-
-    const coreconf_node_t *node = _find_coreconf_node(sid);
-
-    if (!node) {
-        return COAP_CODE_PATH_NOT_FOUND;
-    }
-
-    void *argv[CONFIG_CORECONF_COAP_ARGS_NUM] = { 0 };
-
-    ssize_t res = _read_node(enc, node, argv);
-
-    return res;
 }
 
 static void _init_encoder(coreconf_encoder_t *encoder)
@@ -533,15 +535,6 @@ static void _init_encoder(coreconf_encoder_t *encoder)
 static void _init_decoder(coreconf_decoder_t *decoder)
 {
     (void)decoder;
-}
-
-int coreconf_get_args_num(coreconf_ctx_t *ctx, size_t num, const char **args)
-{
-
-    (void)ctx;
-    (void)num;
-    (void)args;
-    return 0;
 }
 
 static int _parse_uri_query(coreconf_ctx_t *ctx,
@@ -685,7 +678,7 @@ static ssize_t _coreconf_read_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len,
     if (_pdu2sid(pdu, &sid)) {
         return gcoap_response(pdu, buf, len, COAP_CODE_NOT_ACCEPTABLE);
     }
-    int res = _parse_opts(pdu, &encoder.ctx);
+    ssize_t res = _parse_opts(pdu, &encoder.ctx);
 
     if (res < 0) {
         return res;
@@ -736,7 +729,7 @@ static ssize_t _coreconf_read_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len,
     else {
         nanocbor_fmt_map(coreconf_encoder_cbor(&encoder), 1);
 
-        res = coreconf_fmt_sid(&encoder, 0, sid);
+        res = _fmt_sid(&encoder, 0, sid);
 
         if (res < 0) {
             return gcoap_response(pdu, buf, len, COAP_CODE_INTERNAL_SERVER_ERROR);
@@ -797,7 +790,7 @@ static ssize_t _coreconf_write_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len
     assert(state);
     decoder.ctx.state->method = coap_get_code_raw(pdu);
 
-    int res = _parse_opts(pdu, &decoder.ctx);
+    ssize_t res = _parse_opts(pdu, &decoder.ctx);
 
     if (res < 0) {
         return res;

@@ -276,13 +276,13 @@ typedef ssize_t (*coreconf_node_arg_handler_t)
 /**
  * @brief CORECONF XFA node types
  */
-enum {
+typedef enum {
     CORECONF_NODE_LEAF          = 1,    /**< Leaf type */
     CORECONF_NODE_LEAF_LIST     = 2,    /**< Leaf list type */
     CORECONF_NODE_CONTAINER     = 3,    /**< Container node */
     CORECONF_NODE_LIST          = 4,    /**< List type container */
     CORECONF_NODE_DATA_STORE    = 5,    /**< Also a container */
-};
+} coreconf_node_type_t;
 
 /**
  * @brief CORECONF node flags
@@ -369,37 +369,93 @@ static inline bool coreconf_args_empty(const coreconf_ctx_t *ctx)
            (coreconf_ctx_get_method(ctx) == COAP_METHOD_FETCH && nanocbor_at_end(&ctx->decoder));
 }
 
+/**
+ * @brief Check if any argument is supplied with the current request
+ *
+ * TODO: implement all request types, only GET and FETCH implemented now
+ *
+ * @param   enc Encoder context struct
+ *
+ * @return  True if no arguments are supplied
+ */
 static inline bool coreconf_enc_args_empty(const coreconf_encoder_t *enc)
 {
     return coreconf_args_empty(&enc->ctx);
 }
 
+/**
+ * @brief Check if any argument is supplied with the current request
+ *
+ * TODO: implement all request types, only GET and FETCH implemented now
+ *
+ * @param   dec Decoder context struct
+ *
+ * @return  True if no arguments are supplied
+ */
 static inline bool coreconf_dec_args_empty(const coreconf_decoder_t *dec)
 {
     return coreconf_args_empty(&dec->ctx);
 }
 
-static inline int64_t coreconf_sid_diff(coreconf_sid_t mysid, coreconf_sid_t sid)
+/**
+ * @brief Get the difference between two SIDs, @p second - @p first
+ *
+ * @pre second >= first
+ *
+ * @param first First SID, usually the container
+ * @param second Second SID, usually the leaf in the container
+ *
+ * @returns The difference between the SIDs
+ */
+static inline coreconf_sid_t coreconf_sid_diff(coreconf_sid_t first, coreconf_sid_t second)
 {
-    return sid - mysid;
+    return second - first;
 }
 
-static inline void coreconf_cbor_sid(coreconf_encoder_t *enc, coreconf_sid_t mysid,
+/**
+ * @brief Format the SID as CBOR unsigned integer
+ *
+ * @param   enc     Encoder struct
+ * @param   base    Base SID, usually the base container
+ * @param   sid     SID of the YANG node to format
+ */
+static inline void coreconf_cbor_sid(coreconf_encoder_t *enc, coreconf_sid_t base,
                                      coreconf_sid_t sid)
 {
-    nanocbor_fmt_int(coreconf_encoder_cbor(enc), coreconf_sid_diff(mysid, sid));
+    nanocbor_fmt_uint(coreconf_encoder_cbor(enc), coreconf_sid_diff(base, sid));
 }
 
-static inline uint8_t coreconf_node_type(const coreconf_node_t *node)
+/**
+ * @brief Get the node type
+ *
+ * @param   node    Node to get the type for
+ *
+ * @return          The type of the coreconf node
+ */
+static inline coreconf_node_type_t coreconf_node_type(const coreconf_node_t *node)
 {
     return node->type & ~CORECONF_NODE_CONFIG;
 }
 
+/**
+ * @brief Get the config status of the node
+ *
+ * @param   node    Node to get the config status for
+ *
+ * @return          The config status
+ */
 static inline bool coreconf_node_config(const coreconf_node_t *node)
 {
     return node->type & CORECONF_NODE_CONFIG;
 }
 
+/**
+ * @brief Get the SID of the node
+ *
+ * @param   node    Node to get the SID for
+ *
+ * @return          The SID, 0 if not applicable
+ */
 static inline coreconf_sid_t coreconf_node_sid(const coreconf_node_t *node)
 {
     switch (coreconf_node_type(node)) {
@@ -412,16 +468,32 @@ static inline coreconf_sid_t coreconf_node_sid(const coreconf_node_t *node)
     }
 }
 
-int coreconf_get_args_num(coreconf_ctx_t *ctx, size_t num, const char **arg);
+/**
+ * @brief Read and encode all members of a container node
+ *
+ * Skips members based on the configuration parameter with the request.
+ *
+ * @param   enc     Encoder context struct
+ * @param   node    Container type node
+ * @param   argv    List of decoded arguments
+ */
+ssize_t coreconf_read_container(coreconf_encoder_t *enc, const coreconf_node_t *node, void **argv);
 
-int coreconf_read_container(coreconf_encoder_t *enc, const coreconf_node_t *node, void **argv);
-
+/**
+ * @brief Checks if this is the first block part requested
+ *
+ * Can be used to cache data structures to ensure consistency between parts of
+ * the requests
+ *
+ * @param   ctx     Context struct
+ *
+ * @returns True if it is the first part
+ */
 static inline bool coreconf_first_request_part(coreconf_ctx_t *ctx)
 {
     return ctx->blocknum2 == 0;
 }
 
-int coreconf_fmt_sid(coreconf_encoder_t *enc, coreconf_sid_t parent_sid, coreconf_sid_t sid);
 int coreconf_arg_as_str(const coreconf_ctx_t *ctx, int offset, const char **val);
 
 /**
