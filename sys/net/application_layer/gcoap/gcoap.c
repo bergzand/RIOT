@@ -1756,7 +1756,7 @@ int gcoap_get_resource_list(void *buf, size_t maxlen, uint8_t cf,
                 pos += res;
                 ctx.flags &= ~COAP_LINK_FLAG_INIT_RESLIST;
             }
-            else {
+            else if (res < 0) {
                 break;
             }
         }
@@ -1811,4 +1811,13 @@ void gcoap_forward_proxy_post_event(void *arg)
     event_post(&_queue, arg);
 }
 
+void gcoap_post_event(event_t *event)
+{
+    event_post(&_queue, event);
+}
+
+event_queue_t *gcoap_get_queue(void)
+{
+    return &_queue;
+}
 /** @} */

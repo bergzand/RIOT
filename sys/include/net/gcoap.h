@@ -459,7 +459,7 @@ extern "C" {
  * @brief   Size of the buffer used to build a CoAP request or response
  */
 #ifndef CONFIG_GCOAP_PDU_BUF_SIZE
-#define CONFIG_GCOAP_PDU_BUF_SIZE      (128)
+#define CONFIG_GCOAP_PDU_BUF_SIZE      (1024)
 #endif
 
 /**
@@ -1151,6 +1151,20 @@ static inline coap_hdr_t *gcoap_request_memo_get_hdr(const gcoap_request_memo_t 
         return (coap_hdr_t *)memo->msg.data.pdu_buf;
     }
 }
+
+/**
+ * @brief   Post an event to the internal gcoap event loop
+ *
+ * @param[in] event Event to post
+ */
+void gcoap_post_event(event_t *event);
+
+/**
+ * @brief   Get a pointer to the internal gcoap event queue
+ *
+ * @return  The event queue
+ */
+event_queue_t *gcoap_get_queue(void);
 
 #ifdef __cplusplus
 }
