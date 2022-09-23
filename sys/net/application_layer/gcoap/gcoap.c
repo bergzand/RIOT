@@ -1693,7 +1693,7 @@ int gcoap_get_resource_list_tl(void *buf, size_t maxlen, uint8_t cf,
                 pos += res;
                 ctx.flags &= ~COAP_LINK_FLAG_INIT_RESLIST;
             }
-            else {
+            else if (res < 0) {
                 break;
             }
         }
@@ -1748,4 +1748,13 @@ ssize_t gcoap_forward_proxy_dispatch(const uint8_t *buf, size_t len, sock_udp_ep
     return sock_udp_send(&_sock_udp, buf, len, remote);
 }
 
+void gcoap_post_event(event_t *event)
+{
+    event_post(&_queue, event);
+}
+
+event_queue_t *gcoap_get_queue(void)
+{
+    return &_queue;
+}
 /** @} */
