@@ -287,8 +287,8 @@ typedef enum {
 /**
  * @brief CORECONF node flags
  */
-#define CORECONF_NODE_CONFIG        0x80
-#define CORECONF_NODE_STATE         0
+#define CORECONF_NODE_CONFIG        0x80 /**< Node is a config type */
+#define CORECONF_NODE_STATE         0    /**< Node is a state type */
 
 /**
  * @brief optional extra data required with some containers and types
@@ -511,6 +511,8 @@ ssize_t coreconf_reply_error(const coreconf_ctx_t *ctx,
                              const coreconf_node_t *node, coreconf_error_tag_t error_tag,
                              coreconf_app_tag_t app_tag, const char *error_msg);
 
+#ifndef DOXYGEN
+/* Convenience and macro name expansion macros */
 #define _CORECONF_CONCAT_HELPER(a, b)    a ## b
 #define _CORECONF_CONCAT(a, b)  _CORECONF_CONCAT_HELPER(a, b)
 #define _CORECONF_XFA_AUX_NAME(aux)   _CORECONF_CONCAT(coreconf_aux_xfa_, aux)
@@ -518,35 +520,6 @@ ssize_t coreconf_reply_error(const coreconf_ctx_t *ctx,
 #define _CORECONF_XFA_NAME__(container)   _CORECONF_CONCAT(_CORECONF_XFA_NAME(container), _)
 #define _CORECONF_XFA_CONST_WRAPPER(name, prio)   XFA_CONST(name, prio)
 #define _CORECONF_XFA_INIT_CONST_WRAPPER(name, prio)   XFA_INIT_CONST(name, prio)
-#define _CORECONF_XFA_LEN_WRAPPER(type, name)   XFA_LEN(type, name)
-
-/**
- * @brief   Define a CORECONF endpoint
- *
- * This macro is a helper for defining a CORECONF endpoint and adding it to the
- * CORECONF XFA (cross file array).
- *
- * @experimental This should be considered experimental API, subject to change
- *               without notice!
- *
- * Example:
- *
- * ```.c
- * #include "coreconf.h"
- *   // ...
- * }
- * CORECONF_NODE(endpoint, _handler, NULL);
- * ```
- */
-#define CORECONF_LEAF(_container, _num, _config, _read, _write)   \
-    _CORECONF_XFA_CONST_WRAPPER(_CORECONF_XFA_NAME(_container), _num)  \
-    coreconf_node_t _CORECONF_CONCAT(_CORECONF_XFA_NAME__(_container), _num) \
-        = { .type = CORECONF_NODE_LEAF | _config, \
-            .leaf = { \
-                .num = _num, \
-                .read = _read, \
-                .write = _write } \
-        }
 
 #define CORECONF_CONTAINER_AUX(name, _parse, _read, _write) \
     _CORECONF_XFA_CONST_WRAPPER(_CORECONF_XFA_AUX_NAME(aux_), name)  \
@@ -567,7 +540,7 @@ ssize_t coreconf_reply_error(const coreconf_ctx_t *ctx,
             .target = _CORECONF_XFA_NAME(name), \
             .end = _CORECONF_CONCAT(_CORECONF_XFA_NAME(name), _end), \
             .aux = _aux, \
-        } \
+            } \
         }
 
 #define CORECONF_CONTAINER_SUBTYPE_AUX(_container, name, _num, _config, _type, \
@@ -575,16 +548,78 @@ ssize_t coreconf_reply_error(const coreconf_ctx_t *ctx,
     CORECONF_CONTAINER_AUX(name, _parse, _read, _write); \
     CORECONF_CONTAINER_SUBTYPE(_container, name, _num, _config, _type, \
                                &_CORECONF_CONCAT(_CORECONF_XFA_AUX_NAME(aux_), name))
+#endif
 
+/**
+ * @brief   Define a CORECONF leaf endpoint
+ *
+ * This macro is a helper for defining a CORECONF endpoint and adding it to the
+ * CORECONF XFA (cross file array).
+ *
+ * @param _container    Container name it is part of
+ * @param _num          SID value
+ * @param _config       @ref CORECONF_NODE_CONFIG or @ref CORECONF_NODE_STATE
+ * @param _read         Node read function, see @ref coreconf_node_read_handler_t
+ * @param _write        Node write function, see @ref coreconf_node_write_handler_t
+ */
+#define CORECONF_LEAF(_container, _num, _config, _read, _write)   \
+    _CORECONF_XFA_CONST_WRAPPER(_CORECONF_XFA_NAME(_container), _num)  \
+    coreconf_node_t _CORECONF_CONCAT(_CORECONF_XFA_NAME__(_container), _num) \
+        = { .type = CORECONF_NODE_LEAF | _config, \
+            .leaf = { \
+                .num = _num, \
+                .read = _read, \
+                .write = _write } \
+        }
+
+#define CORECONF_RPC(_num, _write)   \
+    _CORECONF_XFA_CONST_WRAPPER(_CORECONF_XFA_NAME(_container), _num)  \
+    coreconf_node_t _CORECONF_CONCAT(coreconf_rpc_xfa, _num) \
+        = { .type = CORECONF_NODE_LEAF, \
+            .leaf = { \
+                .num = _num, \
+                .write = _write } \
+        }
+
+/**
+ * @brief   Define a simple container without parse, read and write functions
+ *
+ * @param container   Parent container name
+ * @param name        Container name
+ * @param _num        SID value
+ * @param _config       @ref CORECONF_NODE_CONFIG or @ref CORECONF_NODE_STATE
+ */
 #define CORECONF_CONTAINER(container, name, _num, _config)     \
     CORECONF_CONTAINER_SUBTYPE(container, name, _num, _config, \
                                CORECONF_NODE_CONTAINER, NULL)
 
+/**
+ * @brief   Define a simple container with parse, read and write functions
+ *
+ * @param container   Parent container name
+ * @param name        Container name
+ * @param _num        SID value
+ * @param _config     @ref CORECONF_NODE_CONFIG or @ref CORECONF_NODE_STATE
+ * @param _parse      Node parse function, see @ref coreconf_node_arg_handler_t
+ * @param _read       Node read function, see @ref coreconf_node_read_handler_t
+ * @param _write      Node write function, see @ref coreconf_node_write_handler_t
+ */
 #define CORECONF_CONTAINER_ADV(container, name, _num, _config, _parse, \
                                _read, _write) \
     CORECONF_CONTAINER_SUBTYPE_AUX(container, name, _num, \
                                    _config, CORECONF_NODE_CONTAINER, _parse, _read, _write)
 
+/**
+ * @brief   Define a container list with parse, read and write functions
+ *
+ * @param container   Parent container name
+ * @param name        Container name
+ * @param _num        SID value
+ * @param _config     @ref CORECONF_NODE_CONFIG or @ref CORECONF_NODE_STATE
+ * @param _parse      Node parse function, see @ref coreconf_node_arg_handler_t
+ * @param _read       Node read function, see @ref coreconf_node_read_handler_t
+ * @param _write      Node write function, see @ref coreconf_node_write_handler_t
+ */
 #define CORECONF_CONTAINER_LIST(container, name, _num, _config, _parse, _read, _write)  \
     CORECONF_CONTAINER_SUBTYPE_AUX(container, name, _num, _config, \
                                    CORECONF_NODE_CONTAINER, _parse, _read, _write)
