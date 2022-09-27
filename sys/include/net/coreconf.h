@@ -282,6 +282,7 @@ typedef enum {
     CORECONF_NODE_CONTAINER     = 3,    /**< Container node */
     CORECONF_NODE_LIST          = 4,    /**< List type container */
     CORECONF_NODE_DATA_STORE    = 5,    /**< Also a container */
+    CORECONF_NODE_RPC           = 6,    /**< RPC type */
 } coreconf_node_type_t;
 
 /**
@@ -459,6 +460,7 @@ static inline bool coreconf_node_config(const coreconf_node_t *node)
 static inline coreconf_sid_t coreconf_node_sid(const coreconf_node_t *node)
 {
     switch (coreconf_node_type(node)) {
+    case CORECONF_NODE_RPC:
     case CORECONF_NODE_LEAF:
         return node->leaf.num;
     case CORECONF_NODE_CONTAINER:
@@ -572,10 +574,19 @@ ssize_t coreconf_reply_error(const coreconf_ctx_t *ctx,
                 .write = _write } \
         }
 
+/**
+ * @brief   Define a CORECONF RPC endpoint
+ *
+ * This macro is a helper for defining a CORECONF RPC endpoint and adding it to
+ * the CORECONF XFA (cross file array).
+ *
+ * @param _num          SID value
+ * @param _write        Node write function, see @ref coreconf_node_write_handler_t
+ */
 #define CORECONF_RPC(_num, _write)   \
-    _CORECONF_XFA_CONST_WRAPPER(_CORECONF_XFA_NAME(_container), _num)  \
-    coreconf_node_t _CORECONF_CONCAT(coreconf_rpc_xfa, _num) \
-        = { .type = CORECONF_NODE_LEAF, \
+    _CORECONF_XFA_CONST_WRAPPER(_CORECONF_XFA_NAME(rpc), _num)  \
+    coreconf_node_t _CORECONF_CONCAT(coreconf_node_xfa_rpc_, _num) \
+        = { .type = CORECONF_NODE_RPC, \
             .leaf = { \
                 .num = _num, \
                 .write = _write } \

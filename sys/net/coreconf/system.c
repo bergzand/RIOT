@@ -19,10 +19,20 @@
 #include "net/gcoap.h"
 #include "xfa.h"
 #include "fmt.h"
+#include "periph/pm.h"
 
 ssize_t coreconf_render_sid(coap_pkt_t *pkt, uint8_t *buf, size_t len, uint64_t sid);
+void _restart_callback(void *arg);
 
-static int _system_platform_machine_node(coreconf_encoder_t *enc, const coreconf_node_t *node,
+static ztimer_t _restart_timeout = { .callback=_restart_callback };
+
+void _restart_callback(void *arg)
+{
+    (void)arg;
+    pm_reboot();
+}
+
+static ssize_t _system_platform_machine_node(coreconf_encoder_t *enc, const coreconf_node_t *node,
                                          void **argv)
 {
     (void)node;
@@ -31,7 +41,7 @@ static int _system_platform_machine_node(coreconf_encoder_t *enc, const coreconf
     return 0;
 }
 
-static int _system_platform_osname_node(coreconf_encoder_t *enc, const coreconf_node_t *node,
+static ssize_t _system_platform_osname_node(coreconf_encoder_t *enc, const coreconf_node_t *node,
                                         void **argv)
 {
     (void)node;
@@ -40,7 +50,7 @@ static int _system_platform_osname_node(coreconf_encoder_t *enc, const coreconf_
     return 0;
 }
 
-static int _system_platform_osrelease_node(coreconf_encoder_t *enc, const coreconf_node_t *node,
+static ssize_t _system_platform_osrelease_node(coreconf_encoder_t *enc, const coreconf_node_t *node,
                                            void **argv)
 {
     (void)node;
@@ -68,7 +78,7 @@ static int _system_platform_osrelease_node(coreconf_encoder_t *enc, const coreco
     return 0;
 }
 
-static int _system_platform_osversion_node(coreconf_encoder_t *enc, const coreconf_node_t *node,
+static ssize_t _system_platform_osversion_node(coreconf_encoder_t *enc, const coreconf_node_t *node,
                                            void **argv)
 {
     (void)node;
@@ -77,8 +87,22 @@ static int _system_platform_osversion_node(coreconf_encoder_t *enc, const coreco
     return 0;
 }
 
+static ssize_t _system_restart(coreconf_decoder_t *dec, const coreconf_node_t *node,
+        void **argv)
+{
+
+    (void)dec;
+    (void)node;
+    (void)argv;
+    /* 500 ms to give gcoap some time to reply with an ack */
+    ztimer_set(ZTIMER_MSEC, &_restart_timeout, 500);
+
+    return 0;
+}
+
 CORECONF_CONTAINER(root, system_platform, 1724, CORECONF_NODE_STATE);
 CORECONF_LEAF(system_platform, 1725, CORECONF_NODE_STATE, _system_platform_machine_node, NULL);
 CORECONF_LEAF(system_platform, 1726, CORECONF_NODE_STATE, _system_platform_osname_node, NULL);
 CORECONF_LEAF(system_platform, 1727, CORECONF_NODE_STATE, _system_platform_osrelease_node, NULL);
 CORECONF_LEAF(system_platform, 1728, CORECONF_NODE_STATE, _system_platform_osversion_node, NULL);
+CORECONF_RPC(1718, _system_restart);

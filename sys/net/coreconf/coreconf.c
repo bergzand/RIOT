@@ -27,7 +27,10 @@
 
 XFA_INIT_CONST(coreconf_node_t, coreconf_node_xfa);
 XFA_INIT_CONST(coreconf_node_t, coreconf_node_xfa_root);
+XFA_INIT_CONST(coreconf_node_t, coreconf_node_xfa_rpc);
 XFA_INIT_CONST(coreconf_node_t, coreconf_node_xfa_zzzzzzzzz);
+
+XFA_INIT_CONST(coreconf_node_t, coreconf_rpc_xfa);
 
 coreconf_state_t _state[CONFIG_CORECONF_COAP_STATE_NUM];
 
@@ -255,6 +258,7 @@ static bool _node_has_read(const coreconf_node_t *node)
 static bool _node_has_write(const coreconf_node_t *node)
 {
     switch (coreconf_node_type(node)) {
+    case CORECONF_NODE_RPC:
     case CORECONF_NODE_LEAF:
         return node->leaf.write;
     case CORECONF_NODE_CONTAINER:
@@ -805,7 +809,7 @@ static ssize_t _coreconf_write_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len
     if (coreconf_ctx_get_method(&decoder.ctx) == COAP_METHOD_DELETE) {
         nanocbor_decoder_init(&decoder.ctx.decoder, NULL, 0);
     }
-    else {
+    else if (pdu->payload_len) {
         nanocbor_value_t outer_map;
         nanocbor_decoder_init(&outer_map, pdu->payload, pdu->payload_len);
         /* todo: walk through the whole cbor struct to validate it */
@@ -834,6 +838,9 @@ static ssize_t _coreconf_write_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len
             goto cbor_fmt_err;
         }
     }
+    else {
+        nanocbor_decoder_init(&decoder.ctx.decoder, NULL, 0);
+    }
 
     /* Validated the outer cbor somewhat, delegate to handler */
     const coreconf_node_t *node = _find_coreconf_node(sid);
@@ -844,6 +851,7 @@ static ssize_t _coreconf_write_handler(coap_pkt_t *pdu, uint8_t *buf, size_t len
 
     switch (coreconf_node_type(node)) {
     case CORECONF_NODE_LEAF:
+    case CORECONF_NODE_RPC:
         wres = node->leaf.write(&decoder, node, argv);
         break;
     case CORECONF_NODE_CONTAINER:
