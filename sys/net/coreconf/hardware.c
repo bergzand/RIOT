@@ -22,12 +22,12 @@
 #include "saul_reg.h"
 #include "fmt.h"
 
-#define HARDWARE_MODULE_SID                             1001000
-#define HARDWARE_HARDWARE_SID                           1001004
-#define HARDWARE_HARDWARE_COMPONENT_SID                 1001014
-#define HARDWARE_HARDWARE_COMPONENT_DESC_SID            1001019
+#define HARDWARE_MODULE_SID                             2200
+#define HARDWARE_HARDWARE_SID                           2204
+#define HARDWARE_HARDWARE_COMPONENT_SID                 2214
+#define HARDWARE_HARDWARE_COMPONENT_DESC_SID            2219
 #define HARDWARE_HARDWARE_COMPONENT_CLASS_SID           (HARDWARE_MODULE_SID + 17)
-#define HARDWARE_HARDWARE_COMPONENT_NAME_SID            1001026
+#define HARDWARE_HARDWARE_COMPONENT_NAME_SID            2226
 #define HARDWARE_HARDWARE_COMPONENT_SD_SID              (HARDWARE_MODULE_SID + 30)
 #define HARDWARE_HARDWARE_COMPONENT_SD_UNITS_SID        (HARDWARE_MODULE_SID + 32)
 #define HARDWARE_HARDWARE_COMPONENT_SD_VAL_SID          (HARDWARE_MODULE_SID + 33)
@@ -126,7 +126,7 @@ static void _hw_hardware_component_class(coreconf_encoder_t *enc, const coreconf
 {
     (void)node;
     (void)argv;
-    nanocbor_fmt_uint(coreconf_encoder_cbor(enc), 1000012); /* Temp number for "sensor" */
+    nanocbor_fmt_uint(coreconf_encoder_cbor(enc), 2212); /* Temp number for "sensor" */
 }
 
 static int _hw_hardware_component_name(coreconf_encoder_t *enc, const coreconf_node_t *node,
