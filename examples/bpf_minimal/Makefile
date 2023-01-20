@@ -7,7 +7,7 @@ BOARD ?= native
 # This has to be the absolute path to the RIOT base directory:
 RIOTBASE ?= $(CURDIR)/../..
 
-USEMODULE += bpf
+USEPKG += femto-container
 BLOBS += bpf/increment.bin
 
 # Comment this out to disable code in RIOT that does safety checking
