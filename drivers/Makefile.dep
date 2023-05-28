@@ -180,6 +180,10 @@ ifneq (,$(filter servo_%,$(USEMODULE)))
   USEMODULE += servo
 endif
 
+ifneq (,$(filter scd4%,$(USEMODULE)))
+  USEMODULE += scd4x
+endif
+
 ifneq (,$(filter sht1%,$(USEMODULE)))
   USEMODULE += sht1x
 endif
