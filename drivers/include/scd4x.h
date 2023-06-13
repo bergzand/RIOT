@@ -67,6 +67,7 @@ int scd4x_init(scd4x_t *dev, const scd4x_params_t *params);
 
 int scd4x_start_measurements(scd4x_t *dev, bool low_power);
 int scd4x_read_measurement(scd4x_t *dev);
+int scd4x_read_co2_measurement(scd4x_t *dev);
 int scd4x_measurement_ready(scd4x_t *dev);
 #ifdef __cplusplus
 }
