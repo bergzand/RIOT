@@ -54,7 +54,7 @@ int main(void)
         }
         else if (res == 1) {
             //puts("Reading measurement");
-            int level = scd4x_read_measurement(&dev);
+            int level = scd4x_read_co2_measurement(&dev);
             if (level < 0) {
                 //printf("Error reading sensor measurement: %i\n", level);
             }
