@@ -15,6 +15,7 @@
 #include "rbpf/builtin_shared.h"
 #include "rbpf/instruction.h"
 #include "rbpf/config.h"
+#include "rbpf/internal/syscall.h"
 
 static bool _rbpf_check_call(uint32_t num)
 {

@@ -139,6 +139,7 @@ extern "C" {
  * @brief Magic number for the header
  */
 #define RBPF_MAGIC_NO (0x46504272)
+#define RBPF_EXTRA_REGIONS_NUM 4
 
 /**
  * @brief Header for rBPF applications
@@ -194,6 +195,7 @@ typedef struct rbpf_mem_region rbpf_mem_region_t;
  */
 #define RBPF_MEM_REGION_READ     0x01   /**< Memory region has reads allowed */
 #define RBPF_MEM_REGION_WRITE    0x02   /**< Memory region has writes allowed */
+#define RBPF_MEM_REGION_OPAQUE   0x08   /**< Memory region has syscall access allowed */
 /** @} */
 
 
@@ -226,6 +228,7 @@ typedef struct {
     rbpf_mem_region_t rodata_region;    /**< Memory permissions for the application read-only data */
     rbpf_mem_region_t data_region;      /**< Memory permissions for the application data region */
     rbpf_mem_region_t arg_region;       /**< Memory region for the caller-supplied arguments */
+    rbpf_mem_region_t extra_regions[RBPF_EXTRA_REGIONS_NUM];   /**< Extra memory regions allocated */
     const void *application;            /**< Application header */
     size_t application_len;             /**< Application length */
     uint8_t *stack;                     /**< VM stack, must be  and aligned */
@@ -239,7 +242,7 @@ typedef struct {
  * @param rbpf  rBPF application calling the function
  * @param regs  Register state of the virtual machine
  */
-typedef uint32_t (*rbpf_call_t)(rbpf_application_t *rbpf, uint64_t *regs);
+typedef int (*rbpf_call_t)(rbpf_application_t *rbpf, uint64_t *regs);
 
 /**
  * @brief Initialize a new rBPF application
@@ -301,7 +304,7 @@ int rbpf_application_run_ctx_name_function(rbpf_application_t *rbpf, const char 
  * @param   len     Length of the region
  * @param   flags   Permission flags
  */
-static inline void rbpf_memory_region_init(rbpf_mem_region_t *region, void *start, size_t len,
+static inline void rbpf_memory_region_init(rbpf_mem_region_t *region, const void *start, size_t len,
                                            uint8_t flags)
 {
     region->start = start;
@@ -326,7 +329,7 @@ void rbpf_add_region(rbpf_application_t *rbpf, rbpf_mem_region_t *region);
  *
  * @return True if allowed, false if not allowed
  */
-bool rbpf_store_allowed(const rbpf_application_t *rbpf, void *addr, size_t size);
+bool rbpf_store_allowed(const rbpf_application_t *rbpf, const void *addr, size_t size);
 
 /**
  * @brief   Check if a load/read operation is allowed by the virtual machine with an address and size
@@ -337,7 +340,9 @@ bool rbpf_store_allowed(const rbpf_application_t *rbpf, void *addr, size_t size)
  *
  * @return True if allowed, false if not allowed
  */
-bool rbpf_load_allowed(const rbpf_application_t *rbpf, void *addr, size_t size);
+bool rbpf_load_allowed(const rbpf_application_t *rbpf, const void *addr, size_t size);
+
+bool rbpf_mem_allowed(const rbpf_application_t *rbpf, const void *addr, size_t size, uint8_t type);
 
 static inline const rbpf_header_t *rbpf_header(const rbpf_application_t *rbpf)
 {

@@ -36,6 +36,7 @@ int rbpf_application_run_ctx_idx_function(rbpf_application_t *rbpf, size_t func_
 {
     rbpf_memory_region_init(&rbpf->arg_region, ctx, ctx_size,
                             RBPF_MEM_REGION_READ | RBPF_MEM_REGION_WRITE);
+    memset(rbpf->extra_regions, 0, sizeof(rbpf->extra_regions));
 
     assert(rbpf->flags & RBPF_FLAG_SETUP_DONE);
     return rbpf_engine_run(rbpf, func_idx, ctx, result);

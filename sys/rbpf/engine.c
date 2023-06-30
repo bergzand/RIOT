@@ -18,6 +18,7 @@
 #include "rbpf/builtin_calls.h"
 #include "rbpf/instruction.h"
 #include "rbpf/config.h"
+#include "rbpf/internal/syscall.h"
 
 static bool _check_mem(const rbpf_application_t *rbpf, const intptr_t addr, size_t size,
                        uint8_t type)
@@ -46,14 +47,19 @@ static bool _check_store(const rbpf_application_t *rbpf, const intptr_t addr, si
     return _check_mem(rbpf, addr, size, RBPF_MEM_REGION_WRITE);
 }
 
-bool rbpf_store_allowed(const rbpf_application_t *rbpf, void *addr, size_t size)
+bool rbpf_store_allowed(const rbpf_application_t *rbpf, const void *addr, size_t size)
 {
     return _check_store(rbpf, (intptr_t)addr, size);
 }
 
-bool rbpf_load_allowed(const rbpf_application_t *rbpf, void *addr, size_t size)
+bool rbpf_load_allowed(const rbpf_application_t *rbpf, const void *addr, size_t size)
 {
     return _check_load(rbpf, (intptr_t)addr, size);
+}
+
+bool rbpf_mem_allowed(const rbpf_application_t *rbpf, const void *addr, size_t size, uint8_t type)
+{
+    return _check_mem(rbpf, (intptr_t)addr, size, type);
 }
 
 static rbpf_call_t _rbpf_get_call(uint32_t num)
