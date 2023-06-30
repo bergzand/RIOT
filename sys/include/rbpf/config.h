@@ -19,12 +19,4 @@
 #endif
 
 
-#ifndef RBPF_EXTERNAL_CALLS
-static inline rbpf_call_t rbpf_get_external_call(uint32_t num)
-{
-    (void)num;
-    return NULL;
-}
-#endif
-
 #endif /* RBPF_CONFIG_H */

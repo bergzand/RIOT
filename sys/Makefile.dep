@@ -1058,4 +1058,13 @@ ifneq (,$(filter uri_parser,$(USEMODULE)))
   USEMODULE += fmt
 endif
 
+ifneq (,$(filter rbpf,$(USEMODULE)))
+  USEMODULE += virt_syscall
+  USEMODULE += rbpf_syscall
+endif
+
+ifneq (,$(filter rbpf_syscall,$(USEMODULE)))
+  USEMODULE += random
+endif
+
 include $(RIOTBASE)/sys/test_utils/Makefile.dep
