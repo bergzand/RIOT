@@ -7,7 +7,7 @@ RBPF_OBJS = $(RBPF_SOURCES:.c=.o)
 LLC ?= llc
 CLANG ?= clang
 INC_FLAGS = -nostdinc -isystem `$(CLANG) -print-file-name=include`
-EXTRA_CFLAGS ?= -Os -emit-llvm
+EXTRA_CFLAGS ?= -Os -emit-llvm -fno-stack-protector
 
 RBPFINCLUDE =  -I$(RIOTBASE)/drivers/include \
 	       -I$(RIOTBASE)/core/include \
