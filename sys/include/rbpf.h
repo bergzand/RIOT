@@ -125,10 +125,12 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "rbpf/instruction.h"
+#include "rbpf/mem_pool.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 
 /**
  * @brief Stack size inside the virtual machine, fixed size per specification
@@ -234,6 +236,7 @@ typedef struct {
     uint8_t *stack;                     /**< VM stack, must be  and aligned */
     uint16_t flags;                     /**< State flags for the virtual machine */
     uint32_t branches_remaining;        /**< Number of allowed branch instructions remaining */
+    rbpf_mem_pool_t pool;
 } rbpf_application_t;
 
 /**

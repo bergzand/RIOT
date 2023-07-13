@@ -25,6 +25,7 @@
 #include <string.h>
 #include "rbpf.h"
 #include "rbpf/shared.h"
+#include "rbpf/shared/utils.h"
 #include "embUnit.h"
 #include "xtimer.h"
 
@@ -44,6 +45,25 @@ typedef struct {
     __bpf_shared_ptr(const uint16_t *, data);
     uint32_t words;
 } fletcher32_ctx_t;
+
+static rbpf_mem_pool_t _pool;
+
+static void tests_rbpf_allocator(void)
+{
+    memset(&_pool, 0, sizeof(_pool));
+    int handle = rbpf_mem_pool_calloc_handle(&_pool, 20, 1);
+
+    TEST_ASSERT(handle >= 0);
+
+    rbpf_mem_pool_handle_t *phandle = rbpf_mem_pool_find_handle(&_pool, handle);
+    TEST_ASSERT(phandle);
+    TEST_ASSERT_EQUAL_INT(handle, phandle->num);
+    TEST_ASSERT_EQUAL_INT(1, phandle->type);
+    TEST_ASSERT_EQUAL_INT(20, phandle->num_bytes);
+
+    void *obj = rbpf_mem_pool_obj_by_handle(&_pool, handle);
+    TEST_ASSERT(phandle->ptr == obj);
+}
 
 static void tests_rbpf_header(void)
 {
@@ -106,6 +126,7 @@ static void tests_rbpf_run2(void)
 Test *tests_bpf(void)
 {
     EMB_UNIT_TESTFIXTURES(fixtures) {
+        new_TestFixture(tests_rbpf_allocator),
         new_TestFixture(tests_rbpf_header),
         new_TestFixture(tests_rbpf_run1),
         new_TestFixture(tests_rbpf_run2),
