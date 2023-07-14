@@ -31,7 +31,8 @@ extern "C" {
 typedef struct rbpf_mem_pool_handle {
     clist_node_t node;
     void *ptr;
-    size_t num_bytes;
+    size_t alloc_size;
+    size_t req_size;
     unsigned type;
     unsigned num;
 } rbpf_mem_pool_handle_t;

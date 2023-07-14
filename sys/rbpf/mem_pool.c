@@ -16,13 +16,20 @@
 #include "rbpf/mem_pool.h"
 #include "clist.h"
 
-static size_t _align4(size_t num_bytes)
+#define ENABLE_DEBUG 1
+#include "debug.h"
+
+static size_t _align8(size_t num_bytes)
 {
-    return (num_bytes + 3) & ~0x03;
+    return (num_bytes + 7) & ~0x07;
 }
 
 static void *_mem_pool_calloc(rbpf_mem_pool_t *pool, size_t size, size_t num)
 {
+    if ((SIZE_MAX / num) < size) {
+        return NULL;
+    }
+
     size_t num_bytes = size * num;
     if (pool->last + num_bytes > CONFIG_RBPF_MEM_POOL_BYTES) {
         return NULL;
@@ -35,7 +42,8 @@ static void *_mem_pool_calloc(rbpf_mem_pool_t *pool, size_t size, size_t num)
 static void _setup_handle(rbpf_mem_pool_t *pool, rbpf_mem_pool_handle_t *handle, void *obj, size_t obj_bytes, unsigned type)
 {
     handle->ptr = obj;
-    handle->num_bytes = obj_bytes;
+    handle->req_size = obj_bytes;
+    handle->alloc_size = _align8(obj_bytes);
     handle->type = type;
     handle->num = pool->handle_num;
     pool->handle_num++;
@@ -43,8 +51,10 @@ static void _setup_handle(rbpf_mem_pool_t *pool, rbpf_mem_pool_handle_t *handle,
 
 int rbpf_mem_pool_calloc_handle(rbpf_mem_pool_t *pool, size_t obj_bytes, unsigned type)
 {
-    size_t allocated_size = _align4(obj_bytes);
+    size_t allocated_size = _align8(obj_bytes);
     /* Allocate new handle */
+    static_assert((sizeof(rbpf_mem_pool_handle_t) % 8) == 0,
+            "Size of rbpf_mem_pool_handle_t must be a multiple of 8");
     rbpf_mem_pool_handle_t *handle = _mem_pool_calloc(pool, sizeof(rbpf_mem_pool_handle_t), 1);
     if (!handle) {
         return -1;
@@ -57,7 +67,7 @@ int rbpf_mem_pool_calloc_handle(rbpf_mem_pool_t *pool, size_t obj_bytes, unsigne
         return -1;
     }
 
-    _setup_handle(pool, handle, obj, allocated_size, type);
+    _setup_handle(pool, handle, obj, obj_bytes, type);
 
     /* Push handle to the end of the list */
     clist_rpush(&pool->list, &handle->node);
