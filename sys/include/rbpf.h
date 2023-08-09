@@ -236,7 +236,7 @@ typedef struct {
     uint8_t *stack;                     /**< VM stack, must be  and aligned */
     uint16_t flags;                     /**< State flags for the virtual machine */
     uint32_t branches_remaining;        /**< Number of allowed branch instructions remaining */
-    rbpf_mem_pool_t pool;
+    rbpf_mem_pool_t pool;               /**< Memory pool of the instance */
 } rbpf_application_t;
 
 /**
