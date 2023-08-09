@@ -33,6 +33,7 @@ enum {
     VIRT_SYSCALL_ERR_MEM = -1,
     VIRT_SYSCALL_ERR_CLASS = -2,
     VIRT_SYSCALL_ERR_TYPE = -3,
+    VIRT_SYSCALL_ERR_INVALID_ARG = -4,
 };
 
 /**
@@ -64,6 +65,8 @@ typedef struct {
     int (*add_mem_region)(void *ctx, const void *addr, size_t len, virt_syscall_mem_perm_t permissions);
     int (*call_allowed)(void *ctx, uintptr_t call, uint32_t class, virt_syscall_type_t type);
     int (*check_mem)(void *ctx, const uint8_t *buf, size_t len, virt_syscall_mem_perm_t permissions);
+    intptr_t (*alloc_obj_handle)(void *ctx, size_t len);
+    void *(*obj_from_handle)(void *ctx, intptr_t handle);
 } virt_syscall_driver_t;
 
 typedef struct {
@@ -87,6 +90,16 @@ static inline int virt_syscall_call_allowed(const virt_syscall_ctx_t *virt, uint
         uint32_t class, virt_syscall_type_t type)
 {
     return virt->driver->call_allowed(virt->ctx, call, class, type);
+}
+
+static inline intptr_t virt_syscall_alloc_obj_handle(const virt_syscall_ctx_t *virt, size_t len)
+{
+    return virt->driver->alloc_obj_handle(virt->ctx, len);
+}
+
+static inline void *virt_syscall_obj_from_handle(const virt_syscall_ctx_t *virt, intptr_t handle)
+{
+    return virt->driver->obj_from_handle(virt->ctx, handle);
 }
 #ifdef __cplusplus
 }
