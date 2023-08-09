@@ -65,6 +65,12 @@ int rbpf_syscall_saul_find_type(rbpf_application_t *rbpf, uint64_t *regs);
 int rbpf_syscall_saul_read(rbpf_application_t *rbpf, uint64_t *regs);
 int rbpf_syscall_saul_write(rbpf_application_t *rbpf, uint64_t *regs);
 
+int rbpf_syscall_coap_init_req(rbpf_application_t *rbpf, uint64_t *regs);
+int rbpf_syscall_coap_opt_add_uri(rbpf_application_t *rbpf, uint64_t *regs);
+int rbpf_syscall_coap_opt_add_format(rbpf_application_t *rbpf, uint64_t *regs);
+int rbpf_syscall_coap_opt_finish(rbpf_application_t *rbpf, uint64_t *regs);
+int rbpf_syscall_coap_hdr_set_type(rbpf_application_t *rbpf, uint64_t *regs);
+int rbpf_syscall_gcoap_req_send(rbpf_application_t *rbpf, uint64_t *regs);
 #ifdef __cplusplus
 }
 #endif

@@ -33,6 +33,7 @@ extern "C" {
 #define RBPF_SYSCALL_GROUP_SYS      0x10000 /**< rBPF system related calls */
 #define RBPF_SYSCALL_GROUP_RANDOM   0x20000 /**< 'random' module calls */
 #define RBPF_SYSCALL_GROUP_SAUL     0x30000 /**< saul module calls */
+#define RBPF_SYSCALL_GROUP_COAP     0x40000 /**< (g)coap module calls */
 
 /**
  * @brief Tail call into another rBPF function
@@ -55,6 +56,13 @@ extern "C" {
 #define RBPF_SYSCALL_SAUL_READ      (RBPF_SYSCALL_GROUP_SAUL | 3)
 #define RBPF_SYSCALL_SAUL_WRITE     (RBPF_SYSCALL_GROUP_SAUL | 4)
 
+
+#define RBPF_SYSCALL_GCOAP_REQ_INIT   (RBPF_SYSCALL_GROUP_COAP | 1)
+#define RBPF_SYSCALL_COAP_OPT_ADD_URI (RBPF_SYSCALL_GROUP_COAP | 2)
+#define RBPF_SYSCALL_COAP_OPT_ADD_FORMAT (RBPF_SYSCALL_GROUP_COAP | 3)
+#define RBPF_SYSCALL_COAP_HDR_SET_TYPE (RBPF_SYSCALL_GROUP_COAP | 4)
+#define RBPF_SYSCALL_COAP_OPT_FINISH (RBPF_SYSCALL_GROUP_COAP | 5)
+#define RBPF_SYSCALL_GCOAP_REQ_SEND  (RBPF_SYSCALL_GROUP_COAP | 6)
 #ifdef __cplusplus
 }
 #endif

@@ -25,12 +25,14 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include "phydat.h"
+#include <stdbool.h>
 #include "rbpf/shared/syscalls.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef void handle_t;
 
 /* TODO: autogenerate these */
 //static uint32_t (*bpf_tail_call)(void *ctx, struct bpf_map *map, uint32_t index) = (void*)RBPF_SYSCALL_TAIL_CALL;
@@ -50,10 +52,20 @@ static uint32_t (*bpf_get_prandom_u32)(void) = (void*)RBPF_SYSCALL_RANDOM_UINT32
  */
 static void (*bpf_get_prandom_buf)(void *buf, size_t len) = (void*)RBPF_SYSCALL_RANDOM_BUF;
 
+#if 0
 static void* (*saul_reg_find_nth)(int pos) = (void*)RBPF_SYSCALL_SAUL_FIND_NTH;
 static void* (*saul_reg_find_type)(uint8_t type) = (void*)RBPF_SYSCALL_SAUL_FIND_TYPE;
-static int (*saul_reg_read)(void* ref, phydat_t *data) = (void*)RBPF_SYSCALL_SAUL_READ;
-static int (*saul_reg_write)(void *ref, phydat_t *data) = (void*)RBPF_SYSCALL_SAUL_WRITE;
+static int (*saul_reg_read)(handle_t *ref, phydat_t *data) = (void*)RBPF_SYSCALL_SAUL_READ;
+static int (*saul_reg_write)(handle_t *ref, phydat_t *data) = (void*)RBPF_SYSCALL_SAUL_WRITE;
+#endif
+
+
+static int (*gcoap_req_init)(uint8_t *buf, size_t len, unsigned code) = (void*)RBPF_SYSCALL_GCOAP_REQ_INIT;
+static int (*coap_opt_add_uri)(int handle, const char *path, size_t path_len) = (void*)RBPF_SYSCALL_COAP_OPT_ADD_URI;
+static int (*coap_hdr_set_type)(int handle, unsigned msg_type) = (void*)RBPF_SYSCALL_COAP_HDR_SET_TYPE;
+static int (*coap_opt_add_format)(int handle, unsigned format) = (void*)RBPF_SYSCALL_COAP_OPT_ADD_FORMAT;
+static int (*coap_opt_finish)(int handle, bool payload) = (void*)RBPF_SYSCALL_COAP_OPT_FINISH;
+static int (*gcoap_req_send)(int handle, size_t len, const char *dest_str, size_t dest_len) = (void*)RBPF_SYSCALL_GCOAP_REQ_SEND;
 #ifdef __cplusplus
 }
 #endif
