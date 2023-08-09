@@ -2,6 +2,9 @@ IWASM_CORE := $(PKGDIRBASE)/wamr/core
 IWASM_ROOT := $(IWASM_CORE)/iwasm
 SHARED_LIB_ROOT := $(IWASM_CORE)/shared
 
+DIRS += $(RIOTBASE)/pkg/wamr/contrib/syscall
+INCLUDES += -I$(RIOTBASE)/pkg/wamr/contrib/include
+
 IWASM_INCLUDES += ${IWASM_ROOT}/include \
                    ${SHARED_LIB_ROOT}/platform/include \
                    ${SHARED_LIB_ROOT}/platform/riot \

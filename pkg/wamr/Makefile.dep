@@ -1,6 +1,8 @@
 USEMODULE += sema
 USEMODULE += ztimer64_msec
 USEMODULE += ztimer_usec
+USEMODULE += wamr_syscall
+USEMODULE += virt_syscall
 
 
 #WAMR supports "X86_32/64", "AARCH64", "ARM", "THUMB", "XTENSA" and RISCV
