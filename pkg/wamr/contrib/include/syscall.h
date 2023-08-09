@@ -9,13 +9,13 @@
  */
 
 /**
- * @defgroup    pkg_wamr_user_saul WAMR SAUL bindings
- * @ingroup     pkg_wamr_user
- * @brief       WAMR user SAUL api
+ * @defgroup    pkg_wamr_syscall WAMR syscall interface
+ * @ingroup     pkg_wamr
+ * @brief       WAMR syscalls for RIOT
  * @{
  *
  * @file
- * @brief Interface definitions for WAMR SAUL functions
+ * @brief Interface definitions for WAMR syscalls for RIOT
  *
  * @author      Koen Zandberg <koen@bergzand.net>
  */
@@ -30,6 +30,9 @@
 extern "C" {
 #endif
 
+/**
+ * @brief Extern declaration for the WAMR syscall driver
+ */
 extern const virt_syscall_driver_t wamr_syscall_ctx_driver;
 
 static inline virt_syscall_ctx_t wamr_syscall_ctx(wasm_exec_env_t env)

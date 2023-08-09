@@ -15,7 +15,7 @@
  * @{
  *
  * @file
- * @brief Interface definitions for WAMR SAUL functions
+ * @brief Interface definitions for WAMR SAUL functions for the VM
  *
  * @author      Koen Zandberg <koen@bergzand.net>
  */
