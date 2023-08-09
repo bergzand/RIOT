@@ -28,27 +28,60 @@ extern "C" {
 
 #define CONFIG_RBPF_MEM_POOL_BYTES 256
 
+/**
+ * @brief rBPF mem pool object handle
+ */
 typedef struct rbpf_mem_pool_handle {
-    clist_node_t node;
-    void *ptr;
-    size_t alloc_size;
-    size_t req_size;
-    unsigned type;
-    unsigned num;
+    clist_node_t node;  /**< Next handle in list */
+    void *ptr;          /**< Pointer to the actual object */
+    size_t alloc_size;  /**< Allocated size */
+    size_t req_size;    /**< Requested object size */
+    unsigned type;      /**< Type of object */
+    unsigned num;       /**< Handle number */
 } rbpf_mem_pool_handle_t;
 
 /**
  * @brief Memory pool struct
  */
 typedef struct {
-    clist_node_t list;
-    unsigned handle_num;
+    clist_node_t list; /**< First object in list */
+    unsigned handle_num;    /**< Highest handle number allocated */
     size_t last;    /**< Last offset allocated in pool */
     uint8_t pool[CONFIG_RBPF_MEM_POOL_BYTES]; /**< Pool itself */
 } rbpf_mem_pool_t;
 
+/**
+ * @brief Calloc function to allocate object with handle in the pool
+ *
+ * @param pool      Allocator pool to allocate from
+ * @param obj_bytes Number of bytes to allocate for the object
+ * @param type      Type of the object to allocate
+ *
+ * @return  Negative on error
+ * @return  Handle on ok
+ */
 int rbpf_mem_pool_calloc_handle(rbpf_mem_pool_t *pool, size_t obj_bytes, unsigned type);
+
+/**
+ * @brief Find object handle by numeric handle
+ *
+ * @param pool   Pool to look into
+ * @param handle Handle value to look for
+ *
+ * @return  pointer to the handle
+ * @return  NULL on error or handle not found
+ */
 rbpf_mem_pool_handle_t *rbpf_mem_pool_find_handle(rbpf_mem_pool_t *pool, unsigned handle);
+
+/**
+ * @brief Find object by numeric handle
+ *
+ * @param pool   Pool to look into
+ * @param handle Handle value to look for
+ *
+ * @return  pointer to the object
+ * @return  NULL on error or handle not found
+ */
 void *rbpf_mem_pool_obj_by_handle(rbpf_mem_pool_t *pool, unsigned handle);
 #ifdef __cplusplus
 }
