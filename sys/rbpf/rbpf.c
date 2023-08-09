@@ -49,6 +49,7 @@ int rbpf_application_setup(rbpf_application_t *rbpf, uint8_t *stack,
     if (res < 0) {
         return res;
     }
+    memset(&rbpf->pool, 0, sizeof(rbpf->pool));
     rbpf->stack = stack;
     rbpf->application = application;
     rbpf->application_len = application_len;
