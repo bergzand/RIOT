@@ -30,6 +30,8 @@
 #include "xtimer.h"
 
 #include "blob/rbpf/fletcher32_rbpf.bin.h"
+#include "blob/rbpf/random_num.bin.h"
+#include "blob/rbpf/coap.bin.h"
 
 static const alignas(uint16_t) unsigned char wrap_around_data[] =
         "AD3Awn4kb6FtcsyE0RU25U7f55Yncn3LP3oEx9Gl4qr7iDW7I8L6Pbw9jNnh0sE4DmCKuc"
@@ -59,7 +61,7 @@ static void tests_rbpf_allocator(void)
     TEST_ASSERT(phandle);
     TEST_ASSERT_EQUAL_INT(handle, phandle->num);
     TEST_ASSERT_EQUAL_INT(1, phandle->type);
-    TEST_ASSERT_EQUAL_INT(20, phandle->num_bytes);
+    TEST_ASSERT_EQUAL_INT(20, phandle->req_size);
 
     void *obj = rbpf_mem_pool_obj_by_handle(&_pool, handle);
     TEST_ASSERT(phandle->ptr == obj);
@@ -123,6 +125,30 @@ static void tests_rbpf_run2(void)
     TEST_ASSERT_EQUAL_INT(5, result);
 }
 
+static void tests_rbpf_run3(void)
+{
+    rbpf_application_t rbpf;
+    rbpf_application_setup(&rbpf, _rbpf_stack,
+        (void*)random_num_bin, sizeof(random_num_bin));
+
+    int64_t result = 0;
+    int res = rbpf_application_run_ctx_name_function(&rbpf, "get_random_num", NULL, 0, &result);
+
+    TEST_ASSERT_EQUAL_INT(0, res);
+}
+
+static void tests_rbpf_coap(void)
+{
+    rbpf_application_t rbpf;
+    rbpf_application_setup(&rbpf, _rbpf_stack,
+        (void*)coap_bin, sizeof(coap_bin));
+
+    int64_t result = 0;
+    int res = rbpf_application_run_ctx_name_function(&rbpf, "send_coap", NULL, 0, &result);
+
+    TEST_ASSERT_EQUAL_INT(0, res);
+}
+
 Test *tests_bpf(void)
 {
     EMB_UNIT_TESTFIXTURES(fixtures) {
@@ -130,6 +156,8 @@ Test *tests_bpf(void)
         new_TestFixture(tests_rbpf_header),
         new_TestFixture(tests_rbpf_run1),
         new_TestFixture(tests_rbpf_run2),
+        new_TestFixture(tests_rbpf_run3),
+        new_TestFixture(tests_rbpf_coap),
     };
 
     EMB_UNIT_TESTCALLER(bpf_tests, NULL, NULL, fixtures);

@@ -24,6 +24,7 @@
 
 #include <stddef.h>
 #include "rbpf/shared.h"
+#include "rbpf/shared/utils.h"
 #include "unaligned.h"
 
 typedef struct {
