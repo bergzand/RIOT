@@ -41,8 +41,8 @@ typedef struct rbpf_mem_pool_handle {
  * @brief Memory pool struct
  */
 typedef struct {
-    unsigned handle_num;
     clist_node_t list;
+    unsigned handle_num;
     size_t last;    /**< Last offset allocated in pool */
     uint8_t pool[CONFIG_RBPF_MEM_POOL_BYTES]; /**< Pool itself */
 } rbpf_mem_pool_t;
