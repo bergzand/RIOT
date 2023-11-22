@@ -58,6 +58,7 @@ ifneq (,$(filter coreconf,$(USEMODULE)))
   USEMODULE += base64url
   USEMODULE += checksum
   USEMODULE += ztimer_sec
+  USEMODULE += nanocoap_nanocbor_helper
   USEPKG += nanocbor
 endif
 

@@ -517,7 +517,7 @@ static ssize_t _parse_iface(coreconf_ctx_t *ctx, const coreconf_node_t *node, vo
         }
     }
     else {
-        netif_t *netif = netif_get_by_name(enc->ctx.state->uri_query);
+        netif_t *netif = netif_get_by_name(enc->ctx.memo->uri_query);
         if (netif) {
             argv[0] = netif;
             nanocbor_fmt_array(coreconf_encoder_cbor(enc), 1);

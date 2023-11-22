@@ -77,8 +77,8 @@ static const saul_reg_t *_get_dev(coreconf_ctx_t *ctx, void **argv)
     if (argv[0]) {
         return argv[0];
     }
-    if (fmt_is_number(ctx->state->uri_query)) {
-        uint32_t num = scn_u32_dec(ctx->state->uri_query, 5);
+    if (fmt_is_number(ctx->memo->uri_query)) {
+        uint32_t num = scn_u32_dec(ctx->memo->uri_query, 5);
         return saul_reg_find_nth(num);
     }
     return NULL;

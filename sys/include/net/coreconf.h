@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Inria
+ * Copyright (C) 2023 Inria
  *
  * This file is subject to the terms and conditions of the GNU Lesser
  * General Public License v2.1. See the file LICENSE in the top level
@@ -43,6 +43,7 @@
 #include "net/gcoap.h"
 #include "checksum/fletcher32.h"
 #include "nanocbor/nanocbor.h"
+#include "net/nanocoap/nanocbor_helper.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,17 +57,10 @@ extern "C" {
 #endif
 
 /**
- * @brief Maximum allowed length of the k query parameter
+ * @brief Maximum payload accepted for CoAP requests
  */
 #ifndef CONFIG_CORECONF_COAP_ARGS_LEN
 #define CONFIG_CORECONF_COAP_ARGS_LEN     64
-#endif
-
-/**
- * @brief max number of args in the query supported
- */
-#ifndef CONFIG_CORECONF_COAP_ARGS_NUM
-#define CONFIG_CORECONF_COAP_ARGS_NUM    4
 #endif
 
 /**
@@ -77,7 +71,7 @@ extern "C" {
 #endif
 
 /**
- * @brief Timeout at which a request state is cleared
+ * @brief Timeout at which a request memo is cleared
  */
 #ifndef CONFIG_CORECONF_COAP_STATE_TIMEOUT_SEC
 #define CONFIG_CORECONF_COAP_STATE_TIMEOUT_SEC  5
@@ -167,35 +161,18 @@ enum {
 typedef struct coreconf_node coreconf_node_t;
 
 /**
- * @brief CORECONF coap block2 slicer and etag helper
- */
-typedef struct {
-    coap_block_slicer_t slicer; /**< coap block slicer struct */
-    size_t sliced_length;       /**< Total length sliced */
-    uint8_t *buf;               /**< Buffer to slice into */
-    size_t resp_len;            /**< Total length of the response */
-    uint16_t fletcher_tmp;      /**< Temporary storage for fletcher32 words */
-    fletcher32_ctx_t fltchr;    /**< Fletcher32 context for etag */
-} coreconf_slicer_helper_t;
-
-/**
  * @brief CORECONF request context
  *
- * Used to store request data between block2 requests
+ * Used to store request data between block1/2 requests. Needs sufficient info
+ * to match individual block request and re-assemble the fetch/patch request
  */
 typedef struct {
     event_t ev;                 /**< event to flush the request */
     event_timeout_t timeout;    /**< Timeout to flush the request */
     uint16_t message_id;        /**< message ID to correlate with */
     uint8_t method;             /**< CoAP method */
-    /**
-     * @brief request data for get (uri query string) or fetch (payload)
-     */
-    union {
-        char uri_query[CONFIG_CORECONF_COAP_ARGS_LEN];          /**< Uri query */
-        uint8_t request_data[CONFIG_CORECONF_COAP_ARGS_LEN];    /**< fetch payload */
-    };
-} coreconf_state_t;
+    uint8_t request_data[CONFIG_CORECONF_COAP_ARGS_LEN];    /**< fetch payload */
+} coreconf_memo_t;
 
 /**
  * @brief CORECONF request context
@@ -212,7 +189,7 @@ typedef struct {
     char config;                /**< Config argument */
     char with_default;          /**< defaults argument */
 
-    coreconf_state_t *state;    /**< Ptr to the @ref coreconf_state_t */
+    coreconf_memo_t *memo;    /**< Ptr to the @ref coreconf_memo_t */
     nanocbor_value_t decoder;   /**< CBOR decoder state */
 } coreconf_ctx_t;
 
@@ -221,7 +198,8 @@ typedef struct {
  */
 typedef struct {
     coreconf_ctx_t ctx;                 /**< Generic context */
-    coreconf_slicer_helper_t slicer;    /**< Response slicer */
+    coap_block_slicer_t slicer;
+    coap_nanocbor_slicer_helper_t helper; /**< slicer helper for cbor */
     nanocbor_encoder_t encoder;         /**< Encoder context */
 } coreconf_encoder_t;
 
@@ -244,8 +222,7 @@ typedef struct {
  */
 typedef ssize_t (*coreconf_node_read_handler_t)
     (coreconf_encoder_t *encoder,
-    const coreconf_node_t *node,
-    void **argv);
+    const coreconf_node_t *node);
 
 /**
  * @brief CORECONF node write function.
@@ -339,7 +316,7 @@ struct coreconf_node {
  */
 static inline uint8_t coreconf_ctx_get_method(const coreconf_ctx_t *ctx)
 {
-    return ctx->state->method;
+    return ctx->memo->method;
 }
 
 /**
@@ -352,50 +329,6 @@ static inline uint8_t coreconf_ctx_get_method(const coreconf_ctx_t *ctx)
 static inline nanocbor_encoder_t *coreconf_encoder_cbor(coreconf_encoder_t *enc)
 {
     return &enc->encoder;
-}
-
-/**
- * @brief Check if any argument is supplied with the current request
- *
- * TODO: implement all request types, only GET and FETCH implemented now
- *
- * @param   ctx Context struct
- *
- * @return  True if no arguments are supplied
- */
-static inline bool coreconf_args_empty(const coreconf_ctx_t *ctx)
-{
-    assert(ctx->state);
-    return (coreconf_ctx_get_method(ctx) == COAP_METHOD_GET && ctx->state->uri_query[0] == '\0') ||
-           (coreconf_ctx_get_method(ctx) == COAP_METHOD_FETCH && nanocbor_at_end(&ctx->decoder));
-}
-
-/**
- * @brief Check if any argument is supplied with the current request
- *
- * TODO: implement all request types, only GET and FETCH implemented now
- *
- * @param   enc Encoder context struct
- *
- * @return  True if no arguments are supplied
- */
-static inline bool coreconf_enc_args_empty(const coreconf_encoder_t *enc)
-{
-    return coreconf_args_empty(&enc->ctx);
-}
-
-/**
- * @brief Check if any argument is supplied with the current request
- *
- * TODO: implement all request types, only GET and FETCH implemented now
- *
- * @param   dec Decoder context struct
- *
- * @return  True if no arguments are supplied
- */
-static inline bool coreconf_dec_args_empty(const coreconf_decoder_t *dec)
-{
-    return coreconf_args_empty(&dec->ctx);
 }
 
 /**
